@@ -59,6 +59,10 @@ export class ButterSettings extends HTMLElement {
   }
 
   connectedCallback() {
+    // Set default attribute if not present
+    if (!this.hasAttribute('active-section')) {
+      this.setAttribute('active-section', 'orchestrators');
+    }
     this._loadSettingsFromStore();
     this._subscribeToStore();
     this._render();
@@ -107,83 +111,88 @@ export class ButterSettings extends HTMLElement {
 
   _render() {
     const active = this.activeSection;
-    this.shadowRoot.innerHTML = \`
-      <style>
-        :host { display: block; font-family: system-ui, sans-serif; }
-        .settings-tabs { display: flex; gap: 8px; border-bottom: 2px solid #ddd; margin-bottom: 24px; }
-        .tab-button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tab-button.active { color: #0066cc; border-bottom-color: #0066cc; }
-        .settings-section { display: none; padding: 20px; }
-        .settings-section.active { display: block; }
-        .settings-group { background: #f5f5f5; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .action-button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px; }
-        .action-button.primary { background: #0066cc; color: white; }
-        .action-button.secondary { background: #e0e0e0; }
-        .action-button.danger { background: #dc3545; color: white; }
-        select { padding: 8px; min-width: 200px; }
-        .cost-estimate { background: #e8f4f8; padding: 16px; border-radius: 4px; margin-top: 16px; border-left: 4px solid #0066cc; }
-        .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-      </style>
-      <div class="settings-tabs">
-        <button class="tab-button \${active === 'orchestrators' ? 'active' : ''}" data-tab="orchestrators">Orchestrators</button>
-        <button class="tab-button \${active === 'templates' ? 'active' : ''}" data-tab="templates">Templates</button>
-        <button class="tab-button \${active === 'system' ? 'active' : ''}" data-tab="system">System</button>
-      </div>
-      <section class="settings-section \${active === 'orchestrators' ? 'active' : ''}" data-section="orchestrators">
-        <div class="settings-group" data-section="orchestrator-management">
-          <h3>Manage Orchestrators</h3>
-          <button class="action-button primary" data-action="connect">Connect Orchestrator</button>
-        </div>
-        <div class="settings-group">
-          <h3>Gateway</h3>
-          <button class="action-button danger" data-action="reset-gateway">Reset Gateway</button>
-        </div>
-        <div class="settings-group">
-          <h3>Backup & Restore</h3>
-          <button class="action-button secondary" data-action="backup">Backup</button>
-          <button class="action-button secondary" data-action="restore">Restore</button>
-        </div>
-      </section>
-      <section class="settings-section \${active === 'templates' ? 'active' : ''}" data-section="templates">
-        <div class="settings-group">
-          <h3>Model Settings</h3>
-          <div class="setting-row">
-            <label>Model</label>
-            <select data-setting="model">
-              \${AVAILABLE_MODELS.map(m => \`<option value="\${m.id}" \${this.settings.model === m.id ? 'selected' : ''}>\${m.name}</option>\`).join('')}
-            </select>
-          </div>
-          <div class="setting-row">
-            <label>Thinking Level</label>
-            <select data-setting="thinking">
-              \${THINKING_LEVELS.map(t => \`<option value="\${t.id}" \${this.settings.thinking === t.id ? 'selected' : ''}>\${t.name}</option>\`).join('')}
-            </select>
-          </div>
-          <div class="cost-estimate">
-            <h4>Estimated Cost per 1K tokens</h4>
-            <div class="cost-value">$\${this.calculateCostEstimate(this.settings.model, this.settings.thinking).toFixed(4)}</div>
-          </div>
-        </div>
-      </section>
-      <section class="settings-section \${active === 'system' ? 'active' : ''}" data-section="system">
-        <div class="settings-group">
-          <h3>Appearance</h3>
-          <div class="setting-row">
-            <label>Theme</label>
-            <select data-setting="theme">
-              \${THEMES.map(t => \`<option value="\${t.id}" \${this.settings.theme === t.id ? 'selected' : ''}>\${t.name}</option>\`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="settings-group" data-section="advanced">
-          <h3>Advanced</h3>
-          <div class="setting-row">
-            <label>Enable Notifications</label>
-            <input type="checkbox" data-setting="notifications" \${this.settings.notifications ? 'checked' : ''}>
-          </div>
-        </div>
-      </section>
-    \`;
+    const modelOptions = AVAILABLE_MODELS.map(m => 
+      '<option value="' + m.id + '"' + (this.settings.model === m.id ? ' selected' : '') + '>' + m.name + '</option>'
+    ).join('');
+    const thinkingOptions = THINKING_LEVELS.map(t => 
+      '<option value="' + t.id + '"' + (this.settings.thinking === t.id ? ' selected' : '') + '>' + t.name + '</option>'
+    ).join('');
+    const themeOptions = THEMES.map(t => 
+      '<option value="' + t.id + '"' + (this.settings.theme === t.id ? ' selected' : '') + '>' + t.name + '</option>'
+    ).join('');
+    const cost = this.calculateCostEstimate(this.settings.model, this.settings.thinking).toFixed(4);
+    
+    this.shadowRoot.innerHTML = 
+      '<style>' +
+        ':host { display: block; font-family: system-ui, sans-serif; }' +
+        '.settings-tabs { display: flex; gap: 8px; border-bottom: 2px solid #ddd; margin-bottom: 24px; }' +
+        '.tab-button { padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }' +
+        '.tab-button.active { color: #0066cc; border-bottom-color: #0066cc; }' +
+        '.settings-section { display: none; padding: 20px; }' +
+        '.settings-section.active { display: block; }' +
+        '.settings-group { background: #f5f5f5; border-radius: 8px; padding: 20px; margin-bottom: 20px; }' +
+        '.action-button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 8px; }' +
+        '.action-button.primary { background: #0066cc; color: white; }' +
+        '.action-button.secondary { background: #e0e0e0; }' +
+        '.action-button.danger { background: #dc3545; color: white; }' +
+        'select { padding: 8px; min-width: 200px; }' +
+        '.cost-estimate { background: #e8f4f8; padding: 16px; border-radius: 4px; margin-top: 16px; border-left: 4px solid #0066cc; }' +
+        '.cost-value { font-size: 24px; font-weight: 600; color: #0066cc; }' +
+        '.setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }' +
+      '</style>' +
+      '<div class="settings-tabs">' +
+        '<button class="tab-button ' + (active === 'orchestrators' ? 'active' : '') + '" data-tab="orchestrators">Orchestrators</button>' +
+        '<button class="tab-button ' + (active === 'templates' ? 'active' : '') + '" data-tab="templates">Templates</button>' +
+        '<button class="tab-button ' + (active === 'system' ? 'active' : '') + '" data-tab="system">System</button>' +
+      '</div>' +
+      '<section id="orchestrators-section" class="settings-section ' + (active === 'orchestrators' ? 'active' : '') + '" data-section="orchestrators">' +
+        '<div class="settings-group" data-section="orchestrator-management">' +
+          '<h3>Manage Orchestrators</h3>' +
+          '<button class="action-button primary" data-action="connect">Connect Orchestrator</button>' +
+        '</div>' +
+        '<div class="settings-group">' +
+          '<h3>Gateway</h3>' +
+          '<button class="action-button danger" data-action="reset-gateway">Reset Gateway</button>' +
+        '</div>' +
+        '<div class="settings-group">' +
+          '<h3>Backup & Restore</h3>' +
+          '<button class="action-button secondary" data-action="backup">Backup</button>' +
+          '<button class="action-button secondary" data-action="restore">Restore</button>' +
+        '</div>' +
+      '</section>' +
+      '<section id="templates-section" class="settings-section ' + (active === 'templates' ? 'active' : '') + '" data-section="templates">' +
+        '<div class="settings-group">' +
+          '<h3>Model Settings</h3>' +
+          '<div class="setting-row">' +
+            '<label>Model</label>' +
+            '<select data-setting="model">' + modelOptions + '</select>' +
+          '</div>' +
+          '<div class="setting-row">' +
+            '<label>Thinking Level</label>' +
+            '<select data-setting="thinking">' + thinkingOptions + '</select>' +
+          '</div>' +
+          '<div class="cost-estimate">' +
+            '<h4>Estimated Cost per 1K tokens</h4>' +
+            '<div class="cost-value">$' + cost + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
+      '<section id="system-section" class="settings-section ' + (active === 'system' ? 'active' : '') + '" data-section="system">' +
+        '<div class="settings-group">' +
+          '<h3>Appearance</h3>' +
+          '<div class="setting-row">' +
+            '<label>Theme</label>' +
+            '<select data-setting="theme">' + themeOptions + '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-group" data-section="advanced">' +
+          '<h3>Advanced</h3>' +
+          '<div class="setting-row">' +
+            '<label>Enable Notifications</label>' +
+            '<input type="checkbox" data-setting="notifications"' + (this.settings.notifications ? ' checked' : '') + '>' +
+          '</div>' +
+        '</div>' +
+      '</section>';
   }
 
   _attachEventListeners() {
@@ -220,7 +229,7 @@ export class ButterSettings extends HTMLElement {
 
   _showSectionContent(section) {
     this.shadowRoot.querySelectorAll('.settings-section').forEach(sec => {
-      sec.classList.toggle('active', sec.dataset.section === section);
+      sec.classList.toggle('active', sec.dataset.section === section || sec.id === section + '-section');
     });
   }
 
@@ -248,7 +257,7 @@ export class ButterSettings extends HTMLElement {
   }
 
   updateSetting(key, value) {
-    const prev = this.settings[key];
+    const prev = this.settings[key] !== undefined ? this.settings[key] : null;
     this.settings[key] = value;
     butterStore.set(key, value);
     this.dispatchEvent(new CustomEvent('setting-change', {
