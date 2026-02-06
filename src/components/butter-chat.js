@@ -26,6 +26,16 @@ class ButterChat extends HTMLElement {
     this._connector = null;
     this._unsubscribe = null;
     this._typingTimeout = null;
+    
+    // Store bound event handlers for proper cleanup
+    this._boundHandlers = {
+      sendClick: null,
+      keydown: null,
+      input: null,
+      dragover: null,
+      dragleave: null,
+      drop: null
+    };
   }
 
   get store() {
@@ -60,7 +70,46 @@ class ButterChat extends HTMLElement {
     }
     if (this._typingTimeout) {
       clearTimeout(this._typingTimeout);
+      this._typingTimeout = null;
     }
+    this._removeEventListeners();
+  }
+
+  _removeEventListeners() {
+    const input = this.querySelector('.message-input');
+    const sendButton = this.querySelector('.send-button');
+    const dropZone = this.querySelector('.file-drop-zone');
+
+    if (sendButton && this._boundHandlers.sendClick) {
+      sendButton.removeEventListener('click', this._boundHandlers.sendClick);
+    }
+    if (input) {
+      if (this._boundHandlers.keydown) {
+        input.removeEventListener('keydown', this._boundHandlers.keydown);
+      }
+      if (this._boundHandlers.input) {
+        input.removeEventListener('input', this._boundHandlers.input);
+      }
+    }
+    if (dropZone) {
+      if (this._boundHandlers.dragover) {
+        dropZone.removeEventListener('dragover', this._boundHandlers.dragover);
+      }
+      if (this._boundHandlers.dragleave) {
+        dropZone.removeEventListener('dragleave', this._boundHandlers.dragleave);
+      }
+      if (this._boundHandlers.drop) {
+        dropZone.removeEventListener('drop', this._boundHandlers.drop);
+      }
+    }
+    this._boundHandlers = {
+      sendClick: null,
+      keydown: null,
+      input: null,
+      dragover: null,
+      dragleave: null,
+      drop: null
+    };
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -188,20 +237,22 @@ class ButterChat extends HTMLElement {
   }
 
   attachEventListeners() {
+    // Remove any existing listeners before re-attaching
+    this._removeEventListeners();
+
     const input = this.querySelector('.message-input');
     const sendButton = this.querySelector('.send-button');
     const dropZone = this.querySelector('.file-drop-zone');
 
-    // Send button click
-    sendButton?.addEventListener('click', () => {
+    // Create bound handler references for proper cleanup
+    this._boundHandlers.sendClick = () => {
       if (input?.value.trim()) {
         this._sendMessage(input.value);
         input.value = '';
       }
-    });
+    };
 
-    // Enter key to send (Shift+Enter for new line)
-    input?.addEventListener('keydown', (e) => {
+    this._boundHandlers.keydown = (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         if (input.value.trim()) {
@@ -209,29 +260,27 @@ class ButterChat extends HTMLElement {
           input.value = '';
         }
       }
-    });
+    };
 
-    // Typing indicator
-    input?.addEventListener('input', () => {
+    this._boundHandlers.input = () => {
       this._emitTypingStart();
-    });
+    };
 
-    // Drag and drop
-    dropZone?.addEventListener('dragover', (e) => {
+    this._boundHandlers.dragover = (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (e.dataTransfer?.types?.includes('Files')) {
         dropZone.classList.add('drag-over');
       }
-    });
+    };
 
-    dropZone?.addEventListener('dragleave', (e) => {
+    this._boundHandlers.dragleave = (e) => {
       e.preventDefault();
       e.stopPropagation();
       dropZone.classList.remove('drag-over');
-    });
+    };
 
-    dropZone?.addEventListener('drop', (e) => {
+    this._boundHandlers.drop = (e) => {
       e.preventDefault();
       e.stopPropagation();
       dropZone.classList.remove('drag-over');
@@ -240,7 +289,15 @@ class ButterChat extends HTMLElement {
       if (files.length > 0) {
         this._sendMessage('', files);
       }
-    });
+    };
+
+    // Attach event listeners using stored bound handlers
+    sendButton?.addEventListener('click', this._boundHandlers.sendClick);
+    input?.addEventListener('keydown', this._boundHandlers.keydown);
+    input?.addEventListener('input', this._boundHandlers.input);
+    dropZone?.addEventListener('dragover', this._boundHandlers.dragover);
+    dropZone?.addEventListener('dragleave', this._boundHandlers.dragleave);
+    dropZone?.addEventListener('drop', this._boundHandlers.drop);
   }
 
   render() {

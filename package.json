@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Smart Home Control Reactivity Framework - WebSocket connector for OpenClaw Gateway",
-  "main": "src/services/butter-connector.js",
+  "main": "src/services/butter-connector.cjs",
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
