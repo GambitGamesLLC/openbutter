@@ -20,8 +20,8 @@ export class ButterConnector extends EventTarget {
   }
 
   _getDefaultUrl() {
-    // OpenClaw Gateway default WebSocket port
-    return 'ws://localhost:18789';
+    // OpenClaw Gateway default WebSocket port (use 127.0.0.1 for loopback binding compatibility)
+    return 'ws://127.0.0.1:18789';
   }
 
   async connect() {
@@ -36,14 +36,16 @@ export class ButterConnector extends EventTarget {
       };
 
       this.ws.onclose = () => {
-        console.log('🔌 Disconnected from OpenButter');
+        if (this.connected) {
+          console.log('🔌 Disconnected from OpenButter');
+        }
         this.connected = false;
         this.dispatchEvent(new CustomEvent('disconnected'));
         this._attemptReconnect();
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('🔌 WebSocket error: Is OpenClaw Gateway running? (openclaw gateway status)');
         this.dispatchEvent(new CustomEvent('error', { detail: error }));
       };
 
