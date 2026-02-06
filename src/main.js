@@ -558,6 +558,23 @@ async function init() {
     // Create store
     const store = new ButterStore();
     window.butterStore = store; // Expose for debugging
+    
+    // Clear old orchestrators on first load (auto-fix duplicates from previous versions)
+    const currentOrchs = store.get('orchestrators') || [];
+    if (currentOrchs.length > 0) {
+      const uniqueOrchs = [];
+      const seen = new Set();
+      for (const o of currentOrchs) {
+        if (!seen.has(o.id)) {
+          seen.add(o.id);
+          uniqueOrchs.push(o);
+        }
+      }
+      if (uniqueOrchs.length !== currentOrchs.length) {
+        console.log(`[Init] Cleaned up ${currentOrchs.length - uniqueOrchs.length} duplicate orchestrators`);
+        store.set('orchestrators', uniqueOrchs, { silent: true });
+      }
+    }
 
     // Create connector
     const connector = new ButterConnector();
