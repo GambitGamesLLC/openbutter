@@ -8,6 +8,11 @@
 import { ButterStore } from './services/butter-store.js';
 import { ButterConnector } from './services/butter-connector-browser.js';
 import { debugLogger } from './utils/debug-logger.js';
+import { autoLogger } from './utils/auto-logger.js';
+
+// Initialize auto-logger early to capture all console output to file
+// This allows subagents to read logs via the log server
+autoLogger.init();
 
 // Initialize debug logger early to capture all console output
 debugLogger.init();

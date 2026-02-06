@@ -9,7 +9,7 @@
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:jest": "jest tests/unit/butter-connector.test.js",
-    "dev": "npx serve . -p 3000"
+    "dev": "python3 log_server.py"
   },
   "keywords": [
     "websocket",
