@@ -467,11 +467,9 @@ class ButterApp extends HTMLElement {
       const data = await response.json();
       const sessions = data.sessions || [];
       
-      // Filter for orchestrator sessions (not subagents)
-      // CLI returns sessions with 'key' like 'agent:main:main' or 'agent:main:subagent:xxx'
-      const orchestrators = sessions.filter(s => 
-        s.key && !s.key.includes('subagent')
-      );
+      // Filter for orchestrator sessions (not subagents, not integrations)
+      // Only include the main agent session: 'agent:main:main'
+      const orchestrators = sessions.filter(s => s.key === 'agent:main:main');
       
       if (orchestrators.length === 0) {
         console.log('ℹ️ No orchestrators found in Gateway');
