@@ -477,13 +477,29 @@ class ButterApp extends HTMLElement {
       }
       
       // Add discovered orchestrators to store
-      const existingOrchestrators = this.store.get('orchestrators') || [];
+      let existingOrchestrators = this.store.get('orchestrators') || [];
+      
+      // Deduplicate existing orchestrators (auto-fix any previous duplicates)
+      const seenIds = new Set();
+      existingOrchestrators = existingOrchestrators.filter(o => {
+        if (seenIds.has(o.id)) {
+          console.log(`[Discovery] Removing duplicate from store: ${o.id}`);
+          return false;
+        }
+        seenIds.add(o.id);
+        return true;
+      });
+      
       const existingIds = new Set(existingOrchestrators.map(o => o.id));
       
       let addedCount = 0;
       orchestrators.forEach(orch => {
-        // Skip if already exists
-        if (existingIds.has(orch.sessionKey)) {
+        // Use key as unique ID (CLI returns 'key' not 'sessionKey')
+        const orchId = orch.key;
+        
+        // Skip if already exists (check both old and new id formats for compatibility)
+        if (existingIds.has(orchId) || existingIds.has(orch.sessionKey)) {
+          console.log(`[Discovery] Already have ${orchId}, skipping`);
           return;
         }
         
@@ -492,7 +508,7 @@ class ButterApp extends HTMLElement {
         const agentName = keyParts[1] || 'Unknown';
         
         const newOrchestrator = {
-          id: orch.key,
+          id: orchId,
           name: agentName === 'main' ? 'Chip' : agentName,
           status: 'online',
           avatar: agentName === 'main' ? '🐱‍💻' : '🤖',
@@ -501,6 +517,7 @@ class ButterApp extends HTMLElement {
         };
         
         existingOrchestrators.push(newOrchestrator);
+        existingIds.add(orchId); // Track this ID to prevent duplicates in same run
         addedCount++;
         console.log(`✨ Discovered orchestrator: ${newOrchestrator.name} ${newOrchestrator.avatar}`);
       });
