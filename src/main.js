@@ -478,6 +478,7 @@ class ButterApp extends HTMLElement {
       
       // Add discovered orchestrators to store
       let existingOrchestrators = this.store.get('orchestrators') || [];
+      console.log('[Discovery] Existing orchestrators from store:', existingOrchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
       
       // Deduplicate existing orchestrators (auto-fix any previous duplicates)
       const seenIds = new Set();
@@ -491,15 +492,32 @@ class ButterApp extends HTMLElement {
       });
       
       const existingIds = new Set(existingOrchestrators.map(o => o.id));
+      console.log('[Discovery] Existing IDs set:', [...existingIds]);
       
       let addedCount = 0;
+      let updatedCount = 0;
       orchestrators.forEach(orch => {
         // Use key as unique ID (CLI returns 'key' not 'sessionKey')
         const orchId = orch.key;
+        console.log(`[Discovery] Checking orchestrator from Gateway: key=${orch.key}, sessionKey=${orch.sessionKey}, tokens=${orch.totalTokens}`);
         
-        // Skip if already exists (check both old and new id formats for compatibility)
-        if (existingIds.has(orchId) || existingIds.has(orch.sessionKey)) {
-          console.log(`[Discovery] Already have ${orchId}, skipping`);
+        // Check if already exists (check both old and new id formats for compatibility)
+        const existingIndex = existingOrchestrators.findIndex(o => 
+          o.id === orchId || o.id === orch.sessionKey
+        );
+        
+        if (existingIndex !== -1) {
+          // Update existing orchestrator with fresh data from Gateway
+          // Create a new object to ensure reactivity
+          const existing = existingOrchestrators[existingIndex];
+          console.log(`[Discovery] Updating existing ${orchId}: tokens ${existing.tokenBurn} -> ${orch.totalTokens || 0}`);
+          existingOrchestrators[existingIndex] = {
+            ...existing,
+            tokenBurn: orch.totalTokens || 0,
+            status: 'online',
+            recentActivity: 'Connected via Gateway'
+          };
+          updatedCount++;
           return;
         }
         
@@ -524,16 +542,24 @@ class ButterApp extends HTMLElement {
       
       // Update store with all orchestrators
       this.store.set('orchestrators', existingOrchestrators);
+      console.log('[Discovery] Store updated with orchestrators:', existingOrchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
       
-      // Refresh sidebar to show new orchestrators
+      // Force sidebar refresh to show updates
       const sidebar = this.querySelector('#sidebar');
-      if (sidebar && sidebar.refresh) {
-        sidebar.refresh();
-        console.log('[Discovery] Sidebar refreshed');
+      if (sidebar) {
+        if (sidebar.refresh) {
+          sidebar.refresh();
+          console.log('[Discovery] Sidebar refreshed via refresh()');
+        } else {
+          // Fallback: trigger a custom event that sidebar can listen for
+          console.log('[Discovery] Sidebar refresh method not found, store update should trigger re-render');
+        }
       }
       
       if (addedCount > 0) {
         console.log(`🧈✨ Auto-discovered ${addedCount} orchestrator(s) from Gateway!`);
+      } else if (updatedCount > 0) {
+        console.log(`🧈✨ Updated ${updatedCount} existing orchestrator(s) from Gateway!`);
       } else {
         console.log('ℹ️ All Gateway orchestrators already in store');
       }
@@ -562,15 +588,45 @@ async function init() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.orchestrators) {
+          console.log('[Init] Raw orchestrators from localStorage:', parsed.orchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
+          
+          // First pass: remove exact ID duplicates
           const unique = [];
           const seen = new Set();
           for (const o of parsed.orchestrators) {
             if (!seen.has(o.id)) {
               seen.add(o.id);
               unique.push(o);
+            } else {
+              console.log(`[Init] Removing duplicate orchestrator with ID: ${o.id}`);
             }
           }
-          if (unique.length !== parsed.orchestrators.length) {
+          
+          // Second pass: ensure only one 'agent:main:main' orchestrator exists
+          // If there are multiple that look like Chip (name='Chip' or id contains 'main'), keep only the one with id='agent:main:main'
+          const chipOrchestrators = unique.filter(o => 
+            o.id === 'agent:main:main' || 
+            o.name === 'Chip' || 
+            o.id === 'main'
+          );
+          
+          if (chipOrchestrators.length > 1) {
+            console.log(`[Init] Found ${chipOrchestrators.length} Chip orchestrators, cleaning up...`);
+            // Keep only the one with correct ID 'agent:main:main', or the first one if none match
+            const correctChip = unique.find(o => o.id === 'agent:main:main') || chipOrchestrators[0];
+            console.log(`[Init] Keeping Chip with ID: ${correctChip.id}, tokenBurn: ${correctChip.tokenBurn}`);
+            
+            // Remove all Chip orchestrators from unique
+            const cleaned = unique.filter(o => 
+              !(o.id === 'agent:main:main' || o.name === 'Chip' || o.id === 'main')
+            );
+            // Add back the correct one
+            cleaned.push(correctChip);
+            
+            console.log(`[Init] Removed ${unique.length - cleaned.length} duplicate Chip orchestrators`);
+            parsed.orchestrators = cleaned;
+            localStorage.setItem('butter-store', JSON.stringify(parsed));
+          } else if (unique.length !== parsed.orchestrators.length) {
             console.log(`[Init] Cleaning ${parsed.orchestrators.length - unique.length} duplicate orchestrators from localStorage`);
             parsed.orchestrators = unique;
             localStorage.setItem('butter-store', JSON.stringify(parsed));

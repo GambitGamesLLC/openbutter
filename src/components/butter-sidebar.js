@@ -382,11 +382,13 @@ export class ButterSidebar extends HTMLElement {
     // Initial load
     this.#orchestrators = butterStore.get('orchestrators') || [];
     console.log('[Sidebar] Initial orchestrators:', this.#orchestrators.length);
+    console.log('[Sidebar] Initial orchestrator IDs:', this.#orchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
     this.#renderOrchestrators();
 
     // Subscribe to changes
     this.#unsubscribe = butterStore.subscribe('orchestrators', (orchestrators) => {
       console.log('[Sidebar] Store updated, orchestrators:', orchestrators?.length || 0);
+      console.log('[Sidebar] Updated orchestrator IDs:', orchestrators?.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
       // Always create a new array reference to ensure reactivity
       this.#orchestrators = orchestrators ? [...orchestrators] : [];
       this.#renderOrchestrators();
@@ -475,6 +477,8 @@ export class ButterSidebar extends HTMLElement {
     const list = this.#shadow.querySelector('.orchestrator-list');
     if (!list) return;
 
+    console.log('[Sidebar] Rendering orchestrators:', this.#orchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
+
     // Clear existing items
     list.innerHTML = '';
     this.#itemElements.clear();
@@ -493,11 +497,13 @@ export class ButterSidebar extends HTMLElement {
     }
 
     this.#orchestrators.forEach(orchestrator => {
+      console.log(`[Sidebar] Creating item for orchestrator: ${orchestrator.id} (${orchestrator.name})`);
       const item = this.#createOrchestratorItem(orchestrator);
       list.appendChild(item);
       this.#itemElements.set(orchestrator.id, item);
     });
 
+    console.log(`[Sidebar] Rendered ${this.#itemElements.size} items`);
     this.#updateActiveState();
   }
 
