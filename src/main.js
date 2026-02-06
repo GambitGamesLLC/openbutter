@@ -590,10 +590,15 @@ async function init() {
         if (parsed.orchestrators) {
           console.log('[Init] Raw orchestrators from localStorage:', parsed.orchestrators.map(o => ({ id: o.id, name: o.name, tokenBurn: o.tokenBurn })));
           
-          // First pass: remove exact ID duplicates
+          // First pass: remove exact ID duplicates and non-main orchestrators
           const unique = [];
           const seen = new Set();
           for (const o of parsed.orchestrators) {
+            // Skip Discord integrations and subagents
+            if (o.id && (o.id.includes('discord') || o.id.includes('subagent'))) {
+              console.log(`[Init] Removing non-main orchestrator: ${o.id}`);
+              continue;
+            }
             if (!seen.has(o.id)) {
               seen.add(o.id);
               unique.push(o);
@@ -603,11 +608,9 @@ async function init() {
           }
           
           // Second pass: ensure only one 'agent:main:main' orchestrator exists
-          // If there are multiple that look like Chip (name='Chip' or id contains 'main'), keep only the one with id='agent:main:main'
+          // Only match by exact ID, not by name (to avoid matching Discord integrations)
           const chipOrchestrators = unique.filter(o => 
-            o.id === 'agent:main:main' || 
-            o.name === 'Chip' || 
-            o.id === 'main'
+            o.id === 'agent:main:main'
           );
           
           if (chipOrchestrators.length > 1) {
@@ -616,9 +619,9 @@ async function init() {
             const correctChip = unique.find(o => o.id === 'agent:main:main') || chipOrchestrators[0];
             console.log(`[Init] Keeping Chip with ID: ${correctChip.id}, tokenBurn: ${correctChip.tokenBurn}`);
             
-            // Remove all Chip orchestrators from unique
+            // Remove all Chip orchestrators from unique (only match by ID, not name)
             const cleaned = unique.filter(o => 
-              !(o.id === 'agent:main:main' || o.name === 'Chip' || o.id === 'main')
+              !(o.id === 'agent:main:main')
             );
             // Add back the correct one
             cleaned.push(correctChip);
