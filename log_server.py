@@ -27,8 +27,9 @@ class LogHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         """Override to suppress default request logging"""
         # Only log non-log requests to keep output clean
-        if '/logs' not in args[0]:
-            print(f"[{datetime.now().isoformat()}] {args[0]}")
+        message = format % args
+        if '/logs' not in message:
+            print(f"[{datetime.now().isoformat()}] {message}")
     
     def do_POST(self):
         """Handle POST requests - specifically /logs endpoint"""
