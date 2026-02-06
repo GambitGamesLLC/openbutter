@@ -467,8 +467,8 @@ class ButterApp extends HTMLElement {
       const data = await response.json();
       const sessions = data.sessions || [];
       
-      // Filter for orchestrator sessions (not subagents, not integrations)
-      // Only include the main agent session: 'agent:main:main'
+      // Filter for ONLY the main agent session
+      // Only include: 'agent:main:main' (not subagents, not discord integrations)
       const orchestrators = sessions.filter(s => s.key === 'agent:main:main');
       
       if (orchestrators.length === 0) {
