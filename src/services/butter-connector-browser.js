@@ -21,7 +21,9 @@ export class ButterConnector extends EventTarget {
 
   _getDefaultUrl() {
     // OpenClaw Gateway default WebSocket port (use 127.0.0.1 for loopback binding compatibility)
-    return 'ws://127.0.0.1:18789';
+    // Token auth required - passed as query param for browser WebSocket
+    const token = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
+    return `ws://127.0.0.1:18789/?token=${token}`;
   }
 
   async connect() {
