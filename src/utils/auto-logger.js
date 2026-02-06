@@ -15,7 +15,7 @@ class AutoLogger {
     this.flushTimer = null;
     this.serverAvailable = true; // Start optimistic
     this.consecutiveFailures = 0;
-    this.maxFailures = 5; // Back off after this many failures
+    this.maxFailures = 100; // Increased - keep trying, server may start later
   }
 
   /**
@@ -31,7 +31,10 @@ class AutoLogger {
     
     this.isInitialized = true;
     
-    // Log initialization
+    // Log initialization - use original console to avoid recursion
+    console._originalLog?.('📋 AutoLogger active - logs sent to server');
+    
+    // Queue initialization log
     this.queueLog('info', 'AutoLogger initialized', {
       url: window.location.href,
       userAgent: navigator.userAgent
@@ -42,12 +45,21 @@ class AutoLogger {
    * Patch console methods to capture output
    */
   patchConsole() {
+    // Store original methods if not already stored
+    if (!console._originalLog) {
+      console._originalLog = console.log;
+      console._originalInfo = console.info;
+      console._originalWarn = console.warn;
+      console._originalError = console.error;
+      console._originalDebug = console.debug;
+    }
+    
     const originalConsole = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug
+      log: console._originalLog,
+      info: console._originalInfo,
+      warn: console._originalWarn,
+      error: console._originalError,
+      debug: console._originalDebug
     };
 
     const self = this;
