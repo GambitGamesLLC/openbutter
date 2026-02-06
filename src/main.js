@@ -464,11 +464,13 @@ class ButterApp extends HTMLElement {
         throw new Error(`Gateway returned ${response.status}`);
       }
       
-      const sessions = await response.json();
+      const data = await response.json();
+      const sessions = data.sessions || [];
       
       // Filter for orchestrator sessions (not subagents)
+      // CLI returns sessions with 'key' like 'agent:main:main' or 'agent:main:subagent:xxx'
       const orchestrators = sessions.filter(s => 
-        s.agentId && !s.label?.includes('subagent')
+        s.key && !s.key.includes('subagent')
       );
       
       if (orchestrators.length === 0) {
@@ -487,13 +489,17 @@ class ButterApp extends HTMLElement {
           return;
         }
         
+        // Parse key like 'agent:main:main' or 'agent:agentName:sessionId'
+        const keyParts = orch.key.split(':');
+        const agentName = keyParts[1] || 'Unknown';
+        
         const newOrchestrator = {
-          id: orch.sessionKey,
-          name: orch.agentId || 'Unknown Agent',
+          id: orch.key,
+          name: agentName === 'main' ? 'Chip' : agentName,
           status: 'online',
-          avatar: orch.agentId === 'main' ? '🐱‍💻' : '🤖',
+          avatar: agentName === 'main' ? '🐱‍💻' : '🤖',
           recentActivity: 'Connected via Gateway',
-          tokenBurn: 0
+          tokenBurn: orch.totalTokens || 0
         };
         
         existingOrchestrators.push(newOrchestrator);
