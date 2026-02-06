@@ -7,6 +7,10 @@
 
 import { ButterStore } from './services/butter-store.js';
 import { ButterConnector } from './services/butter-connector-browser.js';
+import { debugLogger } from './utils/debug-logger.js';
+
+// Initialize debug logger early to capture all console output
+debugLogger.init();
 
 // App version for debugging
 const APP_VERSION = '0.1.0';
