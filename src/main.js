@@ -456,13 +456,9 @@ class ButterApp extends HTMLElement {
     const GATEWAY_TOKEN = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
     
     try {
-      console.log('🔍 Fetching from Gateway...');
+      console.log('🔍 Fetching from Gateway via proxy...');
       
-      const response = await fetch('http://127.0.0.1:18789/sessions', {
-        headers: { 
-          'Authorization': `Bearer ${GATEWAY_TOKEN}` 
-        }
-      });
+      const response = await fetch('http://localhost:8080/gateway-sessions');
       
       if (!response.ok) {
         throw new Error(`Gateway returned ${response.status}`);
