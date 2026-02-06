@@ -555,26 +555,35 @@ async function init() {
   const appContainer = document.getElementById('app');
 
   try {
-    // Create store
-    const store = new ButterStore();
-    window.butterStore = store; // Expose for debugging
-    
-    // Clear old orchestrators on first load (auto-fix duplicates from previous versions)
-    const currentOrchs = store.get('orchestrators') || [];
-    if (currentOrchs.length > 0) {
-      const uniqueOrchs = [];
-      const seen = new Set();
-      for (const o of currentOrchs) {
-        if (!seen.has(o.id)) {
-          seen.add(o.id);
-          uniqueOrchs.push(o);
+    // Clear any duplicate orchestrators from localStorage before creating store
+    // This prevents stale data from previous versions
+    try {
+      const stored = localStorage.getItem('butter-store');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.orchestrators) {
+          const unique = [];
+          const seen = new Set();
+          for (const o of parsed.orchestrators) {
+            if (!seen.has(o.id)) {
+              seen.add(o.id);
+              unique.push(o);
+            }
+          }
+          if (unique.length !== parsed.orchestrators.length) {
+            console.log(`[Init] Cleaning ${parsed.orchestrators.length - unique.length} duplicate orchestrators from localStorage`);
+            parsed.orchestrators = unique;
+            localStorage.setItem('butter-store', JSON.stringify(parsed));
+          }
         }
       }
-      if (uniqueOrchs.length !== currentOrchs.length) {
-        console.log(`[Init] Cleaned up ${currentOrchs.length - uniqueOrchs.length} duplicate orchestrators`);
-        store.set('orchestrators', uniqueOrchs, { silent: true });
-      }
+    } catch (e) {
+      console.warn('[Init] Failed to clean localStorage:', e);
     }
+
+    // Create store (will load cleaned data)
+    const store = new ButterStore();
+    window.butterStore = store;
 
     // Create connector
     const connector = new ButterConnector();
