@@ -105,30 +105,31 @@ class LogHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
     
     def _proxy_to_gateway(self):
-        """Proxy request to OpenClaw Gateway"""
-        import urllib.request
-        
-        GATEWAY_URL = 'http://127.0.0.1:18789/sessions'
-        GATEWAY_TOKEN = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1'
+        """Get sessions via OpenClaw CLI"""
+        import subprocess
         
         try:
-            req = urllib.request.Request(
-                GATEWAY_URL,
-                headers={'Authorization': f'Bearer {GATEWAY_TOKEN}'}
+            result = subprocess.run(
+                ['openclaw', 'sessions', 'list', '--json'],
+                capture_output=True,
+                text=True,
+                timeout=10
             )
             
-            with urllib.request.urlopen(req, timeout=5) as response:
-                data = response.read()
-                
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(data)
-                
+            if result.returncode != 0:
+                raise Exception(f"CLI error: {result.stderr}")
+            
+            data = result.stdout.encode()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(data)
+            
         except Exception as e:
-            print(f"[ERROR] Gateway proxy failed: {e}", file=sys.stderr)
-            self.send_error(502, f"Gateway error: {e}")
+            print(f"[ERROR] CLI failed: {e}", file=sys.stderr)
+            self.send_error(502, f"CLI error: {e}")
     
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
