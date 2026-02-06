@@ -20,8 +20,8 @@ export class ButterConnector extends EventTarget {
   }
 
   _getDefaultUrl() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.host}/ws`;
+    // OpenClaw Gateway default WebSocket port
+    return 'ws://localhost:18789';
   }
 
   async connect() {
