@@ -20,12 +20,34 @@ Because:
 
 Plus, "OpenButter" sounds like it should be a real thing, right? Well, now it is.
 
+> ⚠️ **Note:** You need a local web server to run OpenButter (ES modules + CORS). See Quick Start below for easy options.
+
 ## Quick Start
 
-1. **Install OpenClaw** (if you haven't): <https://openclaw.ai/>
-2. **Clone this repo** somewhere
-3. **Open `index.html`** in your browser (seriously, that's it)
-4. **Start chatting** with your orchestrators
+**Important:** ES modules require a local server (CORS restrictions). Pick one:
+
+**Option 1: NPM (if you have Node.js)**
+```bash
+git clone https://github.com/derrickbarra/openbutter.git
+cd openbutter
+npm install
+npm run dev        # Opens on http://localhost:3000
+```
+
+**Option 2: Python**
+```bash
+cd openbutter
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+**Option 3: VS Code**
+Install the "Live Server" extension, right-click `index.html` → "Open with Live Server"
+
+**Then:**
+1. Make sure your OpenClaw Gateway is running
+2. Open the URL in your browser
+3. Start chatting with your orchestrators!
 
 ## Features
 
