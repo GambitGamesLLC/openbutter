@@ -1,18 +1,12 @@
 /**
- * ButterConnector (Browser Version) - Manages WebSocket connection to OpenButter backend
+ * ButterConnector (Browser Version) - Manages WebSocket connection to OpenClaw Gateway
  *
  * Features:
  * - Browser-native WebSocket support
  * - Automatic reconnection with exponential backoff
  * - EventTarget-based event handling
- * - OpenClaw Gateway protocol support (handshake, ping/pong, RPC)
- *
- * WebSocket Stability Fix (2026-02-06):
- * - Reduced ping interval from 30s to 10s to prevent Gateway timeout
- * - Added proper Gateway handshake (respond to connect.challenge)
- * - Changed from custom JSON ping to Gateway health RPC calls
- * - Added request/response tracking for Gateway protocol
- * - Reduced pong timeout from 10s to 5s for faster failure detection
+ * - Simple JSON message protocol
+ * - Keepalive ping/pong
  */
 
 export class ButterConnector extends EventTarget {
@@ -25,19 +19,13 @@ export class ButterConnector extends EventTarget {
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 1000;
 
-    // Keepalive / heartbeat - use shorter intervals to prevent Gateway timeout
+    // Keepalive / heartbeat
     this.pingInterval = null;
-    this.pingIntervalMs = 10000; // Send ping every 10 seconds (reduced from 30s)
+    this.pingIntervalMs = 10000; // Send ping every 10 seconds
     this.pongTimeout = null;
-    this.pongTimeoutMs = 5000; // Wait 5 seconds for pong response (reduced from 10s)
+    this.pongTimeoutMs = 5000; // Wait 5 seconds for pong response
     this.missedPongs = 0;
     this.maxMissedPongs = 2;
-
-    // Gateway protocol
-    this.requestId = 0;
-    this.pendingRequests = new Map();
-    this.connectedClient = null;
-    this.connectRequestId = null;
   }
 
   _getDefaultUrl() {
@@ -79,48 +67,8 @@ export class ButterConnector extends EventTarget {
         try {
           const data = JSON.parse(event.data);
 
-          // Handle Gateway protocol messages
-          if (data.type === 'event' && data.event === 'connect.challenge') {
-            // Respond to Gateway handshake challenge
-            this._sendConnectRequest(data.payload?.nonce);
-            return;
-          }
-
-          if (data.type === 'res' && data.id === this.connectRequestId) {
-            // Handle connect response
-            if (data.ok) {
-              this.connectedClient = data.payload;
-              console.log('🔌 Gateway handshake completed');
-            } else {
-              console.error('🔌 Gateway handshake failed:', data.error);
-              this.disconnect();
-            }
-            return;
-          }
-
-          // Handle response frames for pending requests
-          if (data.type === 'res' && data.id) {
-            const pending = this.pendingRequests.get(data.id);
-            if (pending) {
-              this.pendingRequests.delete(data.id);
-              if (data.ok) {
-                pending.resolve(data.payload);
-              } else {
-                pending.reject(new Error(data.error?.message || 'Request failed'));
-              }
-            }
-            return;
-          }
-
-          // Handle legacy pong response (for backward compatibility)
+          // Handle pong response
           if (data.type === 'pong') {
-            this._handlePong();
-            return;
-          }
-
-          // Handle Gateway tick (keepalive confirmation)
-          if (data.type === 'event' && data.event === 'tick') {
-            // Tick received, connection is alive
             this._handlePong();
             return;
           }
@@ -163,55 +111,6 @@ export class ButterConnector extends EventTarget {
   }
 
   /**
-   * Send connect request to Gateway
-   * @private
-   */
-  _sendConnectRequest(nonce) {
-    if (!this.ws) return;
-
-    this.connectRequestId = this._generateRequestId();
-    const connectMsg = {
-      type: 'req',
-      id: this.connectRequestId,
-      method: 'connect',
-      params: {
-        minProtocol: 1,
-        maxProtocol: 1,
-        client: {
-          id: 'openbutter',
-          version: '0.1.0',
-          platform: 'browser',
-          mode: 'web'
-        },
-        caps: ['rpc'],
-        role: 'client',
-        scopes: ['gateway:rpc']
-      }
-    };
-
-    // If we have a token in the URL, add it to auth
-    const url = new URL(this.url);
-    const token = url.searchParams.get('token');
-    if (token) {
-      connectMsg.params.auth = { token };
-    }
-
-    try {
-      this.ws.send(JSON.stringify(connectMsg));
-    } catch (error) {
-      console.error('Failed to send connect request:', error);
-    }
-  }
-
-  /**
-   * Generate unique request ID
-   * @private
-   */
-  _generateRequestId() {
-    return `req_${++this.requestId}_${Date.now()}`;
-  }
-
-  /**
    * Send a ping message
    * @private
    */
@@ -221,20 +120,7 @@ export class ButterConnector extends EventTarget {
     }
 
     try {
-      // Use native WebSocket ping if available (Node.js ws library)
-      if (typeof this.ws.ping === 'function') {
-        this.ws.ping();
-      } else {
-        // For browser WebSocket, send a minimal message or use Gateway tick
-        // Browser WebSocket doesn't expose ping frames, so we rely on the
-        // Gateway's tick events or send a lightweight RPC call
-        this.ws.send(JSON.stringify({
-          type: 'req',
-          id: this._generateRequestId(),
-          method: 'health',
-          params: {}
-        }));
-      }
+      this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
 
       // Set timeout for pong response
       this.pongTimeout = setTimeout(() => {
@@ -299,20 +185,11 @@ export class ButterConnector extends EventTarget {
 
   disconnect() {
     this._stopKeepalive();
-
-    // Reject all pending requests
-    for (const pending of this.pendingRequests.values()) {
-      pending.reject(new Error('Connection closed'));
-    }
-    this.pendingRequests.clear();
-
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.connected = false;
-    this.connectedClient = null;
-    this.connectRequestId = null;
   }
 }
 
