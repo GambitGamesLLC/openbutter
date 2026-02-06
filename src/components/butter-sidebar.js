@@ -387,7 +387,8 @@ export class ButterSidebar extends HTMLElement {
     // Subscribe to changes
     this.#unsubscribe = butterStore.subscribe('orchestrators', (orchestrators) => {
       console.log('[Sidebar] Store updated, orchestrators:', orchestrators?.length || 0);
-      this.#orchestrators = orchestrators || [];
+      // Always create a new array reference to ensure reactivity
+      this.#orchestrators = orchestrators ? [...orchestrators] : [];
       this.#renderOrchestrators();
     });
   }
