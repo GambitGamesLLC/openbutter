@@ -452,10 +452,11 @@ class ButterApp extends HTMLElement {
    * Auto-adds connected agents as orchestrators for magical first-time experience
    */
   async discoverOrchestrators() {
+    console.log('🔍 discoverOrchestrators() STARTED');
     const GATEWAY_TOKEN = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
     
     try {
-      console.log('🔍 Discovering orchestrators from Gateway...');
+      console.log('🔍 Fetching from Gateway...');
       
       const response = await fetch('http://127.0.0.1:18789/sessions', {
         headers: { 
@@ -561,8 +562,15 @@ async function init() {
     });
 
     // Discover orchestrators from Gateway for magical auto-setup
+    console.log('🔍 About to discover orchestrators...');
     if (app.discoverOrchestrators) {
-      await app.discoverOrchestrators();
+      try {
+        await app.discoverOrchestrators();
+      } catch (e) {
+        console.error('Discovery failed:', e);
+      }
+    } else {
+      console.warn('discoverOrchestrators method not found');
     }
 
     console.log('🧈 OpenButter initialized successfully');
