@@ -349,6 +349,7 @@ export class ButterSidebar extends HTMLElement {
   }
 
   connectedCallback() {
+    console.log('[Sidebar] connectedCallback - mounting');
     this.#renderInitial();
     this.#subscribeToStore();
     this.#bindEvents();
@@ -380,10 +381,12 @@ export class ButterSidebar extends HTMLElement {
   #subscribeToStore() {
     // Initial load
     this.#orchestrators = butterStore.get('orchestrators') || [];
+    console.log('[Sidebar] Initial orchestrators:', this.#orchestrators.length);
     this.#renderOrchestrators();
 
     // Subscribe to changes
     this.#unsubscribe = butterStore.subscribe('orchestrators', (orchestrators) => {
+      console.log('[Sidebar] Store updated, orchestrators:', orchestrators?.length || 0);
       this.#orchestrators = orchestrators || [];
       this.#renderOrchestrators();
     });
@@ -576,10 +579,19 @@ export class ButterSidebar extends HTMLElement {
   }
 
   /**
-   * Re-render the component (for testing)
-   * @private
+   * Re-render the component (public API)
+   * Can be called externally to force a refresh
    */
   render() {
+    this.#renderOrchestrators();
+  }
+
+  /**
+   * Force refresh orchestrators from store
+   * Useful when orchestrators are discovered externally
+   */
+  refresh() {
+    this.#orchestrators = butterStore.get('orchestrators') || [];
     this.#renderOrchestrators();
   }
 }

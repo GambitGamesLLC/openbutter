@@ -17,6 +17,14 @@ export class ButterConnector extends EventTarget {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 1000;
+
+    // Keepalive / heartbeat
+    this.pingInterval = null;
+    this.pingIntervalMs = 30000; // Send ping every 30 seconds
+    this.pongTimeout = null;
+    this.pongTimeoutMs = 10000; // Wait 10 seconds for pong response
+    this.missedPongs = 0;
+    this.maxMissedPongs = 2;
   }
 
   _getDefaultUrl() {
@@ -34,6 +42,8 @@ export class ButterConnector extends EventTarget {
         console.log('🔌 Connected to OpenButter');
         this.connected = true;
         this.reconnectAttempts = 0;
+        this.missedPongs = 0;
+        this._startKeepalive();
         this.dispatchEvent(new CustomEvent('connected'));
       };
 
@@ -42,6 +52,7 @@ export class ButterConnector extends EventTarget {
           console.log('🔌 Disconnected from OpenButter');
         }
         this.connected = false;
+        this._stopKeepalive();
         this.dispatchEvent(new CustomEvent('disconnected'));
         this._attemptReconnect();
       };
@@ -54,6 +65,13 @@ export class ButterConnector extends EventTarget {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
+          // Handle pong response
+          if (data.type === 'pong') {
+            this._handlePong();
+            return;
+          }
+
           this.dispatchEvent(new CustomEvent('message', { detail: data }));
         } catch (e) {
           console.warn('Received non-JSON message:', event.data);
@@ -62,6 +80,83 @@ export class ButterConnector extends EventTarget {
     } catch (error) {
       console.error('Failed to connect:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Start the keepalive ping interval
+   * @private
+   */
+  _startKeepalive() {
+    this._stopKeepalive();
+    this.pingInterval = setInterval(() => {
+      this._sendPing();
+    }, this.pingIntervalMs);
+  }
+
+  /**
+   * Stop the keepalive ping interval
+   * @private
+   */
+  _stopKeepalive() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+    if (this.pongTimeout) {
+      clearTimeout(this.pongTimeout);
+      this.pongTimeout = null;
+    }
+  }
+
+  /**
+   * Send a ping message
+   * @private
+   */
+  _sendPing() {
+    if (!this.connected || !this.ws) {
+      return;
+    }
+
+    try {
+      this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+
+      // Set timeout for pong response
+      this.pongTimeout = setTimeout(() => {
+        this._handlePongTimeout();
+      }, this.pongTimeoutMs);
+    } catch (error) {
+      console.error('Failed to send ping:', error);
+    }
+  }
+
+  /**
+   * Handle pong response from server
+   * @private
+   */
+  _handlePong() {
+    // Reset missed pongs counter on successful pong
+    this.missedPongs = 0;
+
+    // Clear the pong timeout
+    if (this.pongTimeout) {
+      clearTimeout(this.pongTimeout);
+      this.pongTimeout = null;
+    }
+  }
+
+  /**
+   * Handle pong timeout - no response received
+   * @private
+   */
+  _handlePongTimeout() {
+    this.missedPongs++;
+    console.warn(`🔌 Pong timeout (${this.missedPongs}/${this.maxMissedPongs})`);
+
+    if (this.missedPongs >= this.maxMissedPongs) {
+      console.error('🔌 Too many missed pongs, reconnecting...');
+      this.disconnect();
+      this._attemptReconnect();
     }
   }
 
@@ -88,10 +183,12 @@ export class ButterConnector extends EventTarget {
   }
 
   disconnect() {
+    this._stopKeepalive();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
+    this.connected = false;
   }
 }
 
