@@ -121,8 +121,21 @@
   
   <!-- Test log after load -->
   <script type="module">
+    // Direct test of log endpoint
+    fetch('http://localhost:8080/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'info', 
+        message: '🧪 Direct fetch test from index.html',
+        url: window.location.href
+      })
+    }).then(r => console.log('Log server response:', r.status))
+      .catch(e => console.error('Log server error:', e));
+      
     setTimeout(() => {
-      console.log('🧪 Test log from inline script');
+      console.log('🧪 Test log from inline script via console');
     }, 2000);
   </script>
 </body>
