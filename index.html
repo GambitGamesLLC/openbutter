@@ -111,12 +111,19 @@
       <div class="loading-spinner"></div>
       <p>Loading OpenButter...</p>
       <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-        Press Ctrl+D to toggle debug console
+        Logs auto-captured to file
       </p>
     </div>
   </div>
   
   <!-- Main entry point -->
   <script type="module" src="src/main.js"></script>
+  
+  <!-- Test log after load -->
+  <script type="module">
+    setTimeout(() => {
+      console.log('🧪 Test log from inline script');
+    }, 2000);
+  </script>
 </body>
 </html>
