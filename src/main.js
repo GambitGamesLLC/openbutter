@@ -446,6 +446,84 @@ class ButterApp extends HTMLElement {
     if (chat && chat.setStore) chat.setStore(store);
     if (settings && settings.setStore) settings.setStore(store);
   }
+
+  /**
+   * Discover orchestrators from OpenClaw Gateway
+   * Auto-adds connected agents as orchestrators for magical first-time experience
+   */
+  async discoverOrchestrators() {
+    const GATEWAY_TOKEN = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
+    
+    try {
+      console.log('🔍 Discovering orchestrators from Gateway...');
+      
+      const response = await fetch('http://127.0.0.1:18789/sessions', {
+        headers: { 
+          'Authorization': `Bearer ${GATEWAY_TOKEN}` 
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Gateway returned ${response.status}`);
+      }
+      
+      const sessions = await response.json();
+      
+      // Filter for orchestrator sessions (not subagents)
+      const orchestrators = sessions.filter(s => 
+        s.agentId && !s.label?.includes('subagent')
+      );
+      
+      if (orchestrators.length === 0) {
+        console.log('ℹ️ No orchestrators found in Gateway');
+        return;
+      }
+      
+      // Add discovered orchestrators to store
+      const existingOrchestrators = this.store.get('orchestrators') || [];
+      const existingIds = new Set(existingOrchestrators.map(o => o.id));
+      
+      let addedCount = 0;
+      orchestrators.forEach(orch => {
+        // Skip if already exists
+        if (existingIds.has(orch.sessionKey)) {
+          return;
+        }
+        
+        const newOrchestrator = {
+          id: orch.sessionKey,
+          name: orch.agentId || 'Unknown Agent',
+          status: 'online',
+          avatar: orch.agentId === 'main' ? '🐱‍💻' : '🤖',
+          recentActivity: 'Connected via Gateway',
+          tokenBurn: 0
+        };
+        
+        existingOrchestrators.push(newOrchestrator);
+        addedCount++;
+        console.log(`✨ Discovered orchestrator: ${newOrchestrator.name} ${newOrchestrator.avatar}`);
+      });
+      
+      // Update store with all orchestrators
+      this.store.set('orchestrators', existingOrchestrators);
+      
+      // Refresh sidebar to show new orchestrators
+      const sidebar = this.querySelector('#sidebar');
+      if (sidebar && sidebar.render) {
+        sidebar.render();
+      }
+      
+      if (addedCount > 0) {
+        console.log(`🧈✨ Auto-discovered ${addedCount} orchestrator(s) from Gateway!`);
+      } else {
+        console.log('ℹ️ All Gateway orchestrators already in store');
+      }
+      
+    } catch (error) {
+      console.warn('⚠️ Failed to discover orchestrators:', error.message);
+      // Non-fatal - app continues to work without auto-discovery
+    }
+  }
 }
 
 // Register the custom element
@@ -481,6 +559,11 @@ async function init() {
     await connector.connect().catch(err => {
       console.warn('Initial connection failed, will retry:', err);
     });
+
+    // Discover orchestrators from Gateway for magical auto-setup
+    if (app.discoverOrchestrators) {
+      await app.discoverOrchestrators();
+    }
 
     console.log('🧈 OpenButter initialized successfully');
 
