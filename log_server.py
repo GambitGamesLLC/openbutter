@@ -75,6 +75,27 @@ class LogHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "Not found")
     
+    def do_GET(self):
+        """Handle GET requests - add /logs-view endpoint"""
+        if self.path == '/logs-view':
+            # Return log file contents
+            try:
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                if LOG_FILE.exists():
+                    with open(LOG_FILE, 'r') as f:
+                        self.wfile.write(f.read().encode())
+                else:
+                    self.wfile.write(b'No logs yet')
+            except Exception as e:
+                self.send_error(500, f"Error reading logs: {e}")
+        else:
+            # Serve static files
+            super().do_GET()
+    
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
         self.send_response(200)
