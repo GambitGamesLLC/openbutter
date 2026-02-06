@@ -21,9 +21,9 @@ export class ButterConnector extends EventTarget {
 
     // Keepalive / heartbeat
     this.pingInterval = null;
-    this.pingIntervalMs = 10000; // Send ping every 10 seconds
+    this.pingIntervalMs = 5000; // Send ping every 5 seconds
     this.pongTimeout = null;
-    this.pongTimeoutMs = 5000; // Wait 5 seconds for pong response
+    this.pongTimeoutMs = 3000; // Wait 3 seconds for pong response
     this.missedPongs = 0;
     this.maxMissedPongs = 2;
   }
