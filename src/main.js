@@ -512,8 +512,9 @@ class ButterApp extends HTMLElement {
       
       // Refresh sidebar to show new orchestrators
       const sidebar = this.querySelector('#sidebar');
-      if (sidebar && sidebar.render) {
-        sidebar.render();
+      if (sidebar && sidebar.refresh) {
+        sidebar.refresh();
+        console.log('[Discovery] Sidebar refreshed');
       }
       
       if (addedCount > 0) {
