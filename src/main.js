@@ -9,6 +9,11 @@ import { ButterStore } from './services/butter-store.js';
 import { ButterConnector } from './services/butter-connector-browser.js';
 import { autoLogger } from './utils/auto-logger.js';
 
+// Import UI components
+import './components/butter-sidebar.js';
+import './components/butter-chat.js';
+import './components/butter-settings.js';
+
 // Initialize auto-logger early to capture all console output to file
 // This allows subagents to read logs via the log server
 autoLogger.init();
@@ -32,8 +37,7 @@ function renderError(error, container) {
 }
 
 /**
- * Main app component placeholder
- * Will be replaced with actual butter-app component once defined
+ * Main ButterApp component - Full chat application UI
  */
 class ButterApp extends HTMLElement {
   constructor() {
@@ -47,21 +51,327 @@ class ButterApp extends HTMLElement {
   }
 
   connectedCallback() {
-    this.innerHTML = `
-      <div style="padding: 2rem; text-align: center;">
-        <h1>🧈 OpenButter</h1>
-        <p>App initialized successfully!</p>
-        <p style="color: var(--text-secondary); margin-top: 1rem;">
-          Connection: <span id="connection-status">Connecting...</span>
-        </p>
-      </div>
-    `;
-    
+    this.render();
+    this.attachEventListeners();
     this.updateConnectionStatus();
   }
 
   disconnectedCallback() {
     this._removeConnectorListeners();
+    this._detachEventListeners();
+  }
+
+  render() {
+    this.innerHTML = `
+      <style>
+        :host {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
+          background: var(--bg-primary, #1a1a2e);
+          color: var(--text-primary, #eaeaea);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        .app-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 1.25rem;
+          background: var(--bg-secondary, #16213e);
+          border-bottom: 1px solid var(--border-color, #2d3748);
+          flex-shrink: 0;
+          height: 56px;
+          box-sizing: border-box;
+        }
+
+        .app-header h1 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--text-primary, #eaeaea);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        #connection-status {
+          font-size: 0.875rem;
+          color: var(--text-secondary, #a0aec0);
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+        }
+
+        #connection-status.connected {
+          color: var(--success, #48bb78);
+        }
+
+        #connection-status.disconnected {
+          color: var(--error, #f56565);
+        }
+
+        #settings-btn {
+          background: var(--bg-tertiary, #1f2937);
+          border: 1px solid var(--border-color, #2d3748);
+          color: var(--text-primary, #eaeaea);
+          padding: 0.5rem 0.875rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        #settings-btn:hover {
+          background: var(--bg-hover, #374151);
+          border-color: var(--border-hover, #4a5568);
+        }
+
+        #settings-btn:active {
+          background: var(--bg-active, #2d3748);
+        }
+
+        .app-layout {
+          display: flex;
+          flex: 1;
+          height: calc(100vh - 56px);
+          overflow: hidden;
+        }
+
+        butter-sidebar {
+          width: 280px;
+          flex-shrink: 0;
+          border-right: 1px solid var(--border-color, #2d3748);
+          background: var(--bg-secondary, #16213e);
+          overflow-y: auto;
+        }
+
+        .chat-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: var(--bg-primary, #1a1a2e);
+          position: relative;
+        }
+
+        butter-chat {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        #settings-panel {
+          position: fixed;
+          top: 56px;
+          right: 0;
+          width: 360px;
+          height: calc(100vh - 56px);
+          background: var(--bg-secondary, #16213e);
+          border-left: 1px solid var(--border-color, #2d3748);
+          box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+          z-index: 100;
+          overflow-y: auto;
+        }
+
+        #settings-panel.hidden {
+          display: none !important;
+        }
+
+        /* Scrollbar styling for dark theme */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: var(--bg-secondary, #16213e);
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: var(--border-color, #2d3748);
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: var(--border-hover, #4a5568);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          butter-sidebar {
+            position: absolute;
+            left: 0;
+            top: 56px;
+            height: calc(100vh - 56px);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.2s ease;
+          }
+
+          butter-sidebar.open {
+            transform: translateX(0);
+          }
+
+          #settings-panel {
+            width: 100%;
+          }
+        }
+
+        /* Error boundary styles */
+        .error-boundary {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          padding: 2rem;
+          text-align: center;
+          background: var(--bg-primary, #1a1a2e);
+          color: var(--text-primary, #eaeaea);
+        }
+
+        .error-boundary h1 {
+          color: var(--error, #f56565);
+          margin-bottom: 1rem;
+        }
+
+        .error-boundary button {
+          margin-top: 1.5rem;
+          padding: 0.75rem 1.5rem;
+          background: var(--accent, #3182ce);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 1rem;
+        }
+
+        .error-boundary button:hover {
+          background: var(--accent-hover, #2c5282);
+        }
+      </style>
+
+      <header class="app-header">
+        <h1>🧈 OpenButter</h1>
+        <div class="header-actions">
+          <span id="connection-status">Connecting...</span>
+          <button id="settings-btn">⚙️ Settings</button>
+        </div>
+      </header>
+      
+      <div class="app-layout">
+        <butter-sidebar id="sidebar"></butter-sidebar>
+        <main class="chat-container">
+          <butter-chat id="chat"></butter-chat>
+        </main>
+      </div>
+      
+      <butter-settings id="settings-panel" class="hidden"></butter-settings>
+    `;
+  }
+
+  attachEventListeners() {
+    // Settings button toggle
+    const settingsBtn = this.querySelector('#settings-btn');
+    const settingsPanel = this.querySelector('#settings-panel');
+    
+    if (settingsBtn && settingsPanel) {
+      settingsBtn.addEventListener('click', () => {
+        settingsPanel.classList.toggle('hidden');
+      });
+    }
+
+    // Listen for orchestrator selection changes from sidebar
+    const sidebar = this.querySelector('#sidebar');
+    if (sidebar) {
+      sidebar.addEventListener('orchestrator-change', (e) => {
+        const orchestratorId = e.detail?.orchestratorId;
+        if (orchestratorId) {
+          this.updateActiveOrchestrator(orchestratorId);
+        }
+      });
+    }
+
+    // Listen for message send events from chat
+    const chat = this.querySelector('#chat');
+    if (chat) {
+      chat.addEventListener('message-send', (e) => {
+        const message = e.detail?.message;
+        if (message && this.connector) {
+          this.sendChatMessage(message);
+        }
+      });
+    }
+
+    // Listen for settings panel close
+    if (settingsPanel) {
+      settingsPanel.addEventListener('close', () => {
+        settingsPanel.classList.add('hidden');
+      });
+    }
+  }
+
+  _detachEventListeners() {
+    // Cleanup handled by DOM removal, but could be explicit here
+  }
+
+  updateActiveOrchestrator(orchestratorId) {
+    const chat = this.querySelector('#chat');
+    if (chat && chat.setOrchestrator) {
+      chat.setOrchestrator(orchestratorId);
+    }
+    
+    // Also update in store if available
+    if (this.store) {
+      this.store.setActiveOrchestrator(orchestratorId);
+    }
+    
+    console.log(`[ButterApp] Active orchestrator changed to: ${orchestratorId}`);
+  }
+
+  async sendChatMessage(message) {
+    if (!this.connector || !this.connector.connected) {
+      console.warn('[ButterApp] Cannot send message: not connected');
+      return;
+    }
+
+    try {
+      // Get active orchestrator from chat or store
+      const chat = this.querySelector('#chat');
+      const orchestratorId = chat?.getActiveOrchestrator?.() || this.store?.getActiveOrchestrator?.();
+      
+      await this.connector.send({
+        type: 'chat_message',
+        payload: {
+          message,
+          orchestratorId,
+          timestamp: Date.now()
+        }
+      });
+      
+      console.log('[ButterApp] Message sent:', message);
+    } catch (error) {
+      console.error('[ButterApp] Failed to send message:', error);
+      
+      // Notify chat of error
+      const chat = this.querySelector('#chat');
+      if (chat && chat.showError) {
+        chat.showError('Failed to send message. Please try again.');
+      }
+    }
   }
 
   _removeConnectorListeners() {
@@ -81,15 +391,17 @@ class ButterApp extends HTMLElement {
   }
 
   updateConnectionStatus() {
-    const status = document.getElementById('connection-status');
-    if (!status || !this.connector) return;
+    const status = this.querySelector('#connection-status');
+    if (!status) return;
 
-    if (this.connector.connected) {
-      status.textContent = 'Connected ✅';
-      status.style.color = 'var(--success)';
+    if (this.connector && this.connector.connected) {
+      status.textContent = 'Connected';
+      status.classList.add('connected');
+      status.classList.remove('disconnected');
     } else {
-      status.innerHTML = `Disconnected ❌<br><small style="color: #666; font-size: 0.85rem;">Check browser security settings (ad blockers, Brave Shields)</small>`;
-      status.style.color = 'var(--error)';
+      status.textContent = 'Disconnected';
+      status.classList.add('disconnected');
+      status.classList.remove('connected');
     }
   }
 
@@ -106,11 +418,33 @@ class ButterApp extends HTMLElement {
     // Attach event listeners
     this.connector.addEventListener('connected', this._boundHandlers.connected);
     this.connector.addEventListener('disconnected', this._boundHandlers.disconnected);
-    this.updateConnectionStatus();
+    
+    // Update status if already rendered
+    if (this.isConnected) {
+      this.updateConnectionStatus();
+    }
+
+    // Pass connector to child components
+    const sidebar = this.querySelector('#sidebar');
+    const chat = this.querySelector('#chat');
+    const settings = this.querySelector('#settings-panel');
+    
+    if (sidebar && sidebar.setConnector) sidebar.setConnector(connector);
+    if (chat && chat.setConnector) chat.setConnector(connector);
+    if (settings && settings.setConnector) settings.setConnector(connector);
   }
 
   setStore(store) {
     this.store = store;
+    
+    // Pass store to child components
+    const sidebar = this.querySelector('#sidebar');
+    const chat = this.querySelector('#chat');
+    const settings = this.querySelector('#settings-panel');
+    
+    if (sidebar && sidebar.setStore) sidebar.setStore(store);
+    if (chat && chat.setStore) chat.setStore(store);
+    if (settings && settings.setStore) settings.setStore(store);
   }
 }
 
@@ -134,12 +468,14 @@ async function init() {
 
     // Create and mount app component
     const app = document.createElement('butter-app');
-    app.setConnector(connector);
-    app.setStore(store);
-
-    // Clear loading state and mount
+    
+    // Clear loading state and mount first
     appContainer.innerHTML = '';
     appContainer.appendChild(app);
+    
+    // Then set dependencies (components are now in DOM)
+    app.setConnector(connector);
+    app.setStore(store);
 
     // Attempt connection
     await connector.connect().catch(err => {
