@@ -84,8 +84,13 @@ class ButterApp extends HTMLElement {
     const status = document.getElementById('connection-status');
     if (!status || !this.connector) return;
 
-    status.textContent = this.connector.connected ? 'Connected ✅' : 'Disconnected ❌';
-    status.style.color = this.connector.connected ? 'var(--success)' : 'var(--error)';
+    if (this.connector.connected) {
+      status.textContent = 'Connected ✅';
+      status.style.color = 'var(--success)';
+    } else {
+      status.innerHTML = `Disconnected ❌<br><small style="color: #666; font-size: 0.85rem;">Check browser security settings (ad blockers, Brave Shields)</small>`;
+      status.style.color = 'var(--error)';
+    }
   }
 
   setConnector(connector) {

@@ -47,7 +47,36 @@ Install the "Live Server" extension, right-click `index.html` → "Open with Liv
 **Then:**
 1. Make sure your OpenClaw Gateway is running
 2. Open the URL in your browser
-3. Start chatting with your orchestrators!
+3. **Disable browser security/ad blockers** for localhost (see Troubleshooting)
+4. Start chatting with your orchestrators!
+
+## Troubleshooting
+
+### Connection Issues
+
+**"Connection failed" or WebSocket errors:**
+
+1. **Check browser security settings** — Ad blockers and privacy shields (Brave Shields, uBlock, etc.) often block WebSocket connections to localhost:
+   - **Brave**: Click the lion icon → Disable "Shields" for localhost
+   - **Firefox/Chrome**: Disable ad blockers for `http://localhost:8080`
+   
+2. **Verify Gateway is running:**
+   ```bash
+   openclaw gateway status
+   # or
+   openclaw gateway start
+   ```
+
+3. **Check port 18789 is not blocked:**
+   ```bash
+   curl http://localhost:18789
+   # Should return Gateway info
+   ```
+
+### Still Stuck?
+
+- Check the [OpenClaw Troubleshooting Guide](https://docs.openclaw.ai/troubleshooting)
+- File an issue with your browser and any error messages
 
 ## Features
 
