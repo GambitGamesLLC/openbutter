@@ -1,0 +1,25 @@
+{
+  "name": "openbutter",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Smart Home Control Reactivity Framework",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "dev": "npx serve . -p 3000",
+    "lint": "eslint src tests"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0"
+  },
+  "keywords": [
+    "smart-home",
+    "iot",
+    "reactivity",
+    "state-management"
+  ],
+  "license": "MIT"
+}
