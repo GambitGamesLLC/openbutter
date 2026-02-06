@@ -2,24 +2,34 @@
   "name": "openbutter",
   "version": "0.1.0",
   "type": "module",
-  "description": "Smart Home Control Reactivity Framework",
+  "description": "Smart Home Control Reactivity Framework - WebSocket connector for OpenClaw Gateway",
+  "main": "src/services/butter-connector.js",
   "scripts": {
     "test": "vitest",
-    "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "dev": "npx serve . -p 3000",
-    "lint": "eslint src tests"
-  },
-  "devDependencies": {
-    "vitest": "^1.0.0",
-    "@vitest/ui": "^1.0.0",
-    "jsdom": "^23.0.0"
+    "test:ui": "vitest --ui",
+    "test:jest": "jest tests/unit/butter-connector.test.js",
+    "dev": "npx serve . -p 3000"
   },
   "keywords": [
+    "websocket",
+    "json-rpc",
+    "openclaw",
+    "connector",
     "smart-home",
     "iot",
     "reactivity",
     "state-management"
   ],
-  "license": "MIT"
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0"
+  }
 }
