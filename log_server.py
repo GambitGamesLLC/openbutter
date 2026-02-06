@@ -33,11 +33,15 @@ class LogHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         """Handle POST requests - specifically /logs endpoint"""
         content_length = int(self.headers.get('Content-Length', 0))
+        client = self.client_address[0]
+        
+        print(f"[DEBUG] POST {self.path} from {client}, Content-Length: {content_length}")
         
         if self.path == '/logs':
             try:
                 # Read the request body
                 body = self.rfile.read(content_length).decode('utf-8')
+                print(f"[DEBUG] Body preview: {body[:100]}...")
                 
                 # Parse and validate the log entry
                 try:
