@@ -16,7 +16,7 @@ Because:
 1. Lobsters go with butter 🦞🧈
 2. Butter makes everything better
 3. It's silly and memorable
-4. You try finding a good, available name in 2025
+4. You try finding a good, available name in 2026
 
 Plus, "OpenButter" sounds like it should be a real thing, right? Well, now it is.
 
