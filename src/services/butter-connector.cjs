@@ -1,6 +1,11 @@
 /**
  * @fileoverview ButterConnector WebSocket service for OpenClaw Gateway communication
  * @module services/butter-connector
+ *
+ * WebSocket Stability Fix (2026-02-06):
+ * - Reduced ping interval from 30s to 10s to prevent Gateway timeout
+ * - Added proper Gateway handshake (respond to connect.challenge)
+ * - Added Gateway protocol support for request/response frames
  */
 
 const WebSocket = require('ws');
@@ -53,7 +58,7 @@ class ButterConnector extends EventEmitter {
     reconnectInterval: 1000,
     maxReconnectInterval: 30000,
     reconnectDecay: 2,
-    heartbeatInterval: 30000,
+    heartbeatInterval: 10000,  // Reduced from 30s to 10s to prevent Gateway timeout
     connectionTimeout: 10000
   };
 
@@ -99,6 +104,12 @@ class ButterConnector extends EventEmitter {
     
     /** @type {number} */
     this.currentReconnectInterval = this.options.reconnectInterval;
+
+    /** @type {number|null} */
+    this._connectRequestId = null;
+
+    /** @type {Object|null} */
+    this._connectedClient = null;
   }
 
   /**
@@ -164,22 +175,95 @@ class ButterConnector extends EventEmitter {
    */
   _handleMessage(data) {
     try {
-      /** @type {JsonRpcResponse} */
       const message = JSON.parse(data.toString());
-      
-      // Handle JSON-RPC response
+
+      // Handle Gateway protocol - connect.challenge event
+      if (message.type === 'event' && message.event === 'connect.challenge') {
+        this._sendConnectRequest(message.payload?.nonce);
+        return;
+      }
+
+      // Handle Gateway connect response
+      if (message.type === 'res' && message.id === this._connectRequestId) {
+        if (message.ok) {
+          this._connectedClient = message.payload;
+          this.emit('handshake', { success: true });
+        } else {
+          this.emit('error', new Error(`Gateway handshake failed: ${message.error?.message || 'Unknown error'}`));
+          this.disconnect();
+        }
+        return;
+      }
+
+      // Handle Gateway response frames
+      if (message.type === 'res' && message.id !== undefined) {
+        const callback = this.pendingRequests.get(message.id);
+        if (callback) {
+          this.pendingRequests.delete(message.id);
+          callback(message);
+        }
+        return;
+      }
+
+      // Handle legacy JSON-RPC response (backward compatibility)
       if (message.id !== undefined && this.pendingRequests.has(message.id)) {
         const callback = this.pendingRequests.get(message.id);
         this.pendingRequests.delete(message.id);
-        
         if (callback) {
           callback(message);
         }
       }
-      
+
       this.emit('message', message);
     } catch (error) {
       this.emit('error', new Error(`Failed to parse message: ${error.message}`));
+    }
+  }
+
+  /**
+   * Sends Gateway connect request
+   * @private
+   * @param {string} [nonce] - Challenge nonce from Gateway
+   * @returns {void}
+   */
+  _sendConnectRequest(nonce) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    this._connectRequestId = this.generateId();
+    const connectMsg = {
+      type: 'req',
+      id: this._connectRequestId,
+      method: 'connect',
+      params: {
+        minProtocol: 1,
+        maxProtocol: 1,
+        client: {
+          id: 'openbutter',
+          version: '0.1.0',
+          platform: 'node',
+          mode: 'standalone'
+        },
+        caps: ['rpc'],
+        role: 'client',
+        scopes: ['gateway:rpc']
+      }
+    };
+
+    // Extract token from URL if present
+    try {
+      const url = new URL(this.options.url);
+      const token = url.searchParams.get('token');
+      if (token) {
+        connectMsg.params.auth = { token };
+      }
+    } catch {
+      // URL parsing failed, skip auth
+    }
+
+    try {
+      this.ws.send(JSON.stringify(connectMsg));
+    } catch (error) {
+      this.emit('error', new Error(`Failed to send connect request: ${error.message}`));
     }
   }
 
