@@ -291,9 +291,9 @@ class ButterApp extends HTMLElement {
     const chat = this.querySelector('#chat');
     if (chat) {
       chat.addEventListener('message-send', (e) => {
-        const message = e.detail?.message;
-        if (message && this.connector) {
-          this.sendChatMessage(message);
+        const content = e.detail?.content;
+        if (content && this.connector) {
+          this.sendChatMessage(content);
         }
       });
     }
@@ -324,7 +324,7 @@ class ButterApp extends HTMLElement {
     console.log(`[ButterApp] Active orchestrator changed to: ${orchestratorId}`);
   }
 
-  async sendChatMessage(message) {
+  async sendChatMessage(content) {
     if (!this.connector || !this.connector.connected) {
       console.warn('[ButterApp] Cannot send message: not connected');
       return;
@@ -335,16 +335,31 @@ class ButterApp extends HTMLElement {
       const chat = this.querySelector('#chat');
       const orchestratorId = chat?.getActiveOrchestrator?.() || this.store?.getActiveOrchestrator?.();
       
+      // Create message object
+      const message = {
+        id: 'msg-' + Date.now(),
+        sender: 'user',
+        content: content,
+        timestamp: new Date().toISOString(),
+        orchestratorId: orchestratorId,
+        type: 'text'
+      };
+      
+      // Add to store immediately for UI feedback
+      const messages = this.store.get('messages') || [];
+      this.store.set('messages', [...messages, message]);
+      
+      // Send via connector
       await this.connector.send({
         type: 'chat_message',
         payload: {
-          message,
+          message: content,
           orchestratorId,
           timestamp: Date.now()
         }
       });
       
-      console.log('[ButterApp] Message sent:', message);
+      console.log('[ButterApp] Message sent:', content);
     } catch (error) {
       console.error('[ButterApp] Failed to send message:', error);
       
@@ -365,10 +380,14 @@ class ButterApp extends HTMLElement {
     if (this._boundHandlers.disconnected) {
       this.connector.removeEventListener('disconnected', this._boundHandlers.disconnected);
     }
+    if (this._boundHandlers.message) {
+      this.connector.removeEventListener('message', this._boundHandlers.message);
+    }
     
     this._boundHandlers = {
       connected: null,
-      disconnected: null
+      disconnected: null,
+      message: null
     };
   }
 
@@ -377,6 +396,12 @@ class ButterApp extends HTMLElement {
     this._removeConnectorListeners();
     
     this.connector = connector;
+    
+    // Create bound handlers
+    this._boundHandlers.message = (e) => this._handleIncomingMessage(e.detail);
+    
+    // Attach event listeners
+    this.connector.addEventListener('message', this._boundHandlers.message);
 
     // Pass connector to child components
     const sidebar = this.querySelector('#sidebar');
@@ -386,6 +411,31 @@ class ButterApp extends HTMLElement {
     if (sidebar && sidebar.setConnector) sidebar.setConnector(connector);
     if (chat && chat.setConnector) chat.setConnector(connector);
     if (settings && settings.setConnector) settings.setConnector(connector);
+  }
+
+  _handleIncomingMessage(data) {
+    console.log('[ButterApp] Received message:', data);
+    
+    // Only handle chat messages
+    if (data.type !== 'chat_message' && data.type !== 'message') {
+      return;
+    }
+    
+    const payload = data.payload || data;
+    
+    // Create message object
+    const message = {
+      id: 'msg-' + Date.now(),
+      sender: payload.sender || 'orchestrator',
+      content: payload.message || payload.content,
+      timestamp: new Date().toISOString(),
+      orchestratorId: payload.orchestratorId,
+      type: 'text'
+    };
+    
+    // Add to store
+    const messages = this.store.get('messages') || [];
+    this.store.set('messages', [...messages, message]);
   }
 
   setStore(store) {
