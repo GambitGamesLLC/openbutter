@@ -5,7 +5,7 @@
  * and mounts the app to the DOM.
  */
 
-import { ButterStore } from './services/butter-store.js';
+import { ButterStore, butterStore } from './services/butter-store.js';
 import { ButterConnector } from './services/butter-connector-browser.js';
 import { autoLogger } from './utils/auto-logger.js';
 
@@ -642,8 +642,8 @@ async function init() {
       console.warn('[Init] Failed to clean localStorage:', e);
     }
 
-    // Create store (will load cleaned data)
-    const store = new ButterStore();
+    // Use singleton store instance (same one components use by default)
+    const store = butterStore;
     window.butterStore = store;
 
     // Check for token in URL
