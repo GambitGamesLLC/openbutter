@@ -31,15 +31,17 @@ Plus, "OpenButter" sounds like it should be a real thing, right? Well, now it is
 git clone https://github.com/derrickbarra/openbutter.git
 cd openbutter
 npm install
-npm run dev        # Opens on http://localhost:3000
+npm run dev        # Runs python3 log_server.py on http://localhost:8080
 ```
 
-**Option 2: Python**
+**Option 2: Python (Recommended)**
 ```bash
 cd openbutter
-python3 -m http.server 8080
+python3 log_server.py
 # Open http://localhost:8080
 ```
+
+*Note: `log_server.py` handles both serving static files AND receiving browser logs via POST. Using `python3 -m http.server` won't work as it doesn't support POST requests.*
 
 **Option 3: VS Code**
 Install the "Live Server" extension, right-click `index.html` → "Open with Live Server"
@@ -105,9 +107,9 @@ Install the "Live Server" extension, right-click `index.html` → "Open with Liv
 ```bash
 git clone https://github.com/derrickbarra/openbutter.git
 cd openbutter
-# Open index.html in your browser
-# Or run a local server:
-python3 -m http.server 8080
+# Run the log server (handles static files + browser logging):
+python3 log_server.py
+# Open http://localhost:8080 in your browser
 ```
 
 ## Contributing
