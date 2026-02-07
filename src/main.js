@@ -53,7 +53,6 @@ class ButterApp extends HTMLElement {
   connectedCallback() {
     this.render();
     this.attachEventListeners();
-    this.updateConnectionStatus();
   }
 
   disconnectedCallback() {
@@ -70,8 +69,8 @@ class ButterApp extends HTMLElement {
           height: 100vh;
           width: 100vw;
           overflow: hidden;
-          background: var(--bg-primary, #1a1a2e);
-          color: var(--text-primary, #eaeaea);
+          background: var(--bg-primary, #0f172a);
+          color: var(--text-primary, #f8fafc);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         }
 
@@ -80,8 +79,8 @@ class ButterApp extends HTMLElement {
           justify-content: space-between;
           align-items: center;
           padding: 0.75rem 1.25rem;
-          background: var(--bg-secondary, #16213e);
-          border-bottom: 1px solid var(--border-color, #2d3748);
+          background: var(--bg-secondary, #1e293b);
+          border-bottom: 1px solid var(--border-color, #334155);
           flex-shrink: 0;
           height: 56px;
           box-sizing: border-box;
@@ -91,7 +90,7 @@ class ButterApp extends HTMLElement {
           margin: 0;
           font-size: 1.25rem;
           font-weight: 600;
-          color: var(--text-primary, #eaeaea);
+          color: var(--text-primary, #f8fafc);
           display: flex;
           align-items: center;
           gap: 0.5rem;
@@ -103,26 +102,10 @@ class ButterApp extends HTMLElement {
           gap: 1rem;
         }
 
-        #connection-status {
-          font-size: 0.875rem;
-          color: var(--text-secondary, #a0aec0);
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-
-        #connection-status.connected {
-          color: var(--success, #48bb78);
-        }
-
-        #connection-status.disconnected {
-          color: var(--error, #f56565);
-        }
-
         #settings-btn {
-          background: var(--bg-tertiary, #1f2937);
-          border: 1px solid var(--border-color, #2d3748);
-          color: var(--text-primary, #eaeaea);
+          background: var(--bg-tertiary, #334155);
+          border: 1px solid var(--border-color, #475569);
+          color: var(--text-primary, #f8fafc);
           padding: 0.5rem 0.875rem;
           border-radius: 6px;
           cursor: pointer;
@@ -134,12 +117,12 @@ class ButterApp extends HTMLElement {
         }
 
         #settings-btn:hover {
-          background: var(--bg-hover, #374151);
-          border-color: var(--border-hover, #4a5568);
+          background: var(--bg-hover, #475569);
+          border-color: var(--border-hover, #64748b);
         }
 
         #settings-btn:active {
-          background: var(--bg-active, #2d3748);
+          background: var(--bg-active, #334155);
         }
 
         .app-layout {
@@ -152,8 +135,8 @@ class ButterApp extends HTMLElement {
         butter-sidebar {
           width: 280px;
           flex-shrink: 0;
-          border-right: 1px solid var(--border-color, #2d3748);
-          background: var(--bg-secondary, #16213e);
+          border-right: 1px solid var(--border-color, #334155);
+          background: var(--bg-secondary, #1e293b);
           overflow-y: auto;
         }
 
@@ -162,7 +145,7 @@ class ButterApp extends HTMLElement {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          background: var(--bg-primary, #1a1a2e);
+          background: var(--bg-primary, #0f172a);
           position: relative;
         }
 
@@ -179,8 +162,8 @@ class ButterApp extends HTMLElement {
           right: 0;
           width: 360px;
           height: calc(100vh - 56px);
-          background: var(--bg-secondary, #16213e);
-          border-left: 1px solid var(--border-color, #2d3748);
+          background: var(--bg-secondary, #1e293b);
+          border-left: 1px solid var(--border-color, #334155);
           box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
           z-index: 100;
           overflow-y: auto;
@@ -197,16 +180,16 @@ class ButterApp extends HTMLElement {
         }
 
         ::-webkit-scrollbar-track {
-          background: var(--bg-secondary, #16213e);
+          background: var(--bg-secondary, #1e293b);
         }
 
         ::-webkit-scrollbar-thumb {
-          background: var(--border-color, #2d3748);
+          background: var(--border-color, #334155);
           border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-          background: var(--border-hover, #4a5568);
+          background: var(--border-hover, #475569);
         }
 
         /* Responsive adjustments */
@@ -239,19 +222,19 @@ class ButterApp extends HTMLElement {
           height: 100vh;
           padding: 2rem;
           text-align: center;
-          background: var(--bg-primary, #1a1a2e);
-          color: var(--text-primary, #eaeaea);
+          background: var(--bg-primary, #0f172a);
+          color: var(--text-primary, #f8fafc);
         }
 
         .error-boundary h1 {
-          color: var(--error, #f56565);
+          color: var(--error, #ef4444);
           margin-bottom: 1rem;
         }
 
         .error-boundary button {
           margin-top: 1.5rem;
           padding: 0.75rem 1.5rem;
-          background: var(--accent, #3182ce);
+          background: var(--accent, #6366f1);
           color: white;
           border: none;
           border-radius: 6px;
@@ -260,14 +243,13 @@ class ButterApp extends HTMLElement {
         }
 
         .error-boundary button:hover {
-          background: var(--accent-hover, #2c5282);
+          background: var(--accent-hover, #4f46e5);
         }
       </style>
 
       <header class="app-header">
         <h1>🧈 OpenButter</h1>
         <div class="header-actions">
-          <span id="connection-status">Connecting...</span>
           <button id="settings-btn">⚙️ Settings</button>
         </div>
       </header>
@@ -390,39 +372,11 @@ class ButterApp extends HTMLElement {
     };
   }
 
-  updateConnectionStatus() {
-    const status = this.querySelector('#connection-status');
-    if (!status) return;
-
-    if (this.connector && this.connector.connected) {
-      status.textContent = 'Connected';
-      status.classList.add('connected');
-      status.classList.remove('disconnected');
-    } else {
-      status.textContent = 'Disconnected';
-      status.classList.add('disconnected');
-      status.classList.remove('connected');
-    }
-  }
-
   setConnector(connector) {
     // Remove listeners from previous connector if any
     this._removeConnectorListeners();
     
     this.connector = connector;
-    
-    // Create bound handlers for proper cleanup
-    this._boundHandlers.connected = () => this.updateConnectionStatus();
-    this._boundHandlers.disconnected = () => this.updateConnectionStatus();
-    
-    // Attach event listeners
-    this.connector.addEventListener('connected', this._boundHandlers.connected);
-    this.connector.addEventListener('disconnected', this._boundHandlers.disconnected);
-    
-    // Update status if already rendered
-    if (this.isConnected) {
-      this.updateConnectionStatus();
-    }
 
     // Pass connector to child components
     const sidebar = this.querySelector('#sidebar');

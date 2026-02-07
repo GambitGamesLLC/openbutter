@@ -22,9 +22,9 @@ const styles = `
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--butter-sidebar-bg, #1a1a2e);
-    color: var(--butter-sidebar-text, #eaeaea);
-    border-right: 1px solid var(--butter-border-color, #2d2d44);
+    background: var(--butter-sidebar-bg, #1e293b);
+    color: var(--butter-sidebar-text, #f8fafc);
+    border-right: 1px solid var(--butter-border-color, #334155);
     transition: width 0.3s ease;
     width: 280px;
     overflow: hidden;
@@ -39,7 +39,7 @@ const styles = `
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    border-bottom: 1px solid var(--butter-border-color, #2d2d44);
+    border-bottom: 1px solid var(--butter-border-color, #334155);
   }
 
   .sidebar-title {
@@ -58,7 +58,7 @@ const styles = `
   .collapse-toggle {
     background: none;
     border: none;
-    color: var(--butter-sidebar-text, #eaeaea);
+    color: var(--butter-sidebar-text, #f8fafc);
     cursor: pointer;
     font-size: 16px;
     padding: 8px;
@@ -70,7 +70,7 @@ const styles = `
   }
 
   .collapse-toggle:hover {
-    background: var(--butter-hover-bg, #2d2d44);
+    background: var(--butter-hover-bg, #334155);
   }
 
   .collapse-icon {
@@ -98,60 +98,64 @@ const styles = `
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
+    padding: 12px 16px;
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s ease;
     border: 2px solid transparent;
+    height: 60px;
   }
 
   .orchestrator-item:hover {
-    background: var(--butter-hover-bg, #2d2d44);
+    background: var(--butter-hover-bg, #334155);
   }
 
   .orchestrator-item.active {
-    background: var(--butter-active-bg, #3d3d5c);
-    border-color: var(--butter-accent, #6c5dd3);
+    background: var(--butter-active-bg, #334155);
+    border-color: var(--butter-accent, #6366f1);
   }
 
   .orchestrator-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: var(--butter-accent, #6c5dd3);
+    background: var(--butter-accent, #6366f1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
     font-size: 14px;
     flex-shrink: 0;
-    position: relative;
   }
 
   .status-dot {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    border: 2px solid var(--butter-sidebar-bg, #1a1a2e);
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .status-dot.online {
-    background: #4ade80;
+    background: #10b981;
   }
 
   .status-dot.offline {
-    background: #9ca3af;
+    background: #6b7280;
   }
 
   .status-dot.busy {
-    background: #fbbf24;
+    background: #f59e0b;
+    animation: pulse 2s ease-in-out infinite;
   }
 
   .status-dot.error {
-    background: #f87171;
+    background: #ef4444;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
 
   .orchestrator-info {
@@ -166,44 +170,33 @@ const styles = `
     display: none;
   }
 
+  .orchestrator-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
   .orchestrator-name {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--butter-sidebar-text, #f8fafc);
   }
 
-  .orchestrator-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .orchestrator-status {
     font-size: 12px;
-    color: var(--butter-muted-text, #9ca3af);
-  }
-
-  .recent-activity {
-    flex: 1;
+    color: var(--butter-muted-text, #94a3b8);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .token-burn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .token-burn::before {
-    content: '🔥';
-    font-size: 10px;
-  }
-
   .sidebar-footer {
     padding: 16px;
-    border-top: 1px solid var(--butter-border-color, #2d2d44);
+    border-top: 1px solid var(--butter-border-color, #334155);
   }
 
   .collapsed .sidebar-footer {
@@ -213,7 +206,7 @@ const styles = `
   .new-orchestrator {
     width: 100%;
     padding: 12px;
-    background: var(--butter-accent, #6c5dd3);
+    background: var(--butter-accent, #6366f1);
     color: white;
     border: none;
     border-radius: 8px;
@@ -223,7 +216,7 @@ const styles = `
   }
 
   .new-orchestrator:hover {
-    background: var(--butter-accent-hover, #5a4ec2);
+    background: var(--butter-accent-hover, #4f46e5);
   }
 
   .new-orchestrator:active {
@@ -246,7 +239,7 @@ const styles = `
     justify-content: center;
     padding: 32px 16px;
     text-align: center;
-    color: var(--butter-muted-text, #9ca3af);
+    color: var(--butter-muted-text, #94a3b8);
   }
 
   .empty-state-icon {
@@ -269,12 +262,12 @@ const styles = `
   }
 
   .orchestrator-list::-webkit-scrollbar-thumb {
-    background: var(--butter-border-color, #2d2d44);
+    background: var(--butter-border-color, #334155);
     border-radius: 3px;
   }
 
   .orchestrator-list::-webkit-scrollbar-thumb:hover {
-    background: var(--butter-muted-text, #9ca3af);
+    background: var(--butter-muted-text, #64748b);
   }
 `;
 
@@ -519,21 +512,19 @@ export class ButterSidebar extends HTMLElement {
     item.dataset.id = orchestrator.id;
 
     const statusClass = orchestrator.status || 'offline';
-    const recentActivity = orchestrator.recentActivity || 'No recent activity';
-    const tokenBurn = this.#formatTokenBurn(orchestrator.tokenBurn);
+    const statusText = this.#getStatusText(orchestrator.status, orchestrator.state);
     const initials = orchestrator.name.slice(0, 2).toUpperCase();
 
     item.innerHTML = `
       <div class="orchestrator-avatar">
         ${initials}
-        <span class="status-dot ${statusClass}"></span>
       </div>
       <div class="orchestrator-info">
-        <div class="orchestrator-name">${this.#escapeHtml(orchestrator.name)}</div>
-        <div class="orchestrator-meta">
-          <span class="recent-activity">${this.#escapeHtml(recentActivity)}</span>
-          <span class="token-burn">${tokenBurn}</span>
+        <div class="orchestrator-name-row">
+          <span class="orchestrator-name">${this.#escapeHtml(orchestrator.name)}</span>
+          <span class="status-dot ${statusClass}"></span>
         </div>
+        <div class="orchestrator-status">${this.#escapeHtml(statusText)}</div>
       </div>
     `;
 
@@ -562,14 +553,33 @@ export class ButterSidebar extends HTMLElement {
   }
 
   /**
-   * Format token burn number with commas
+   * Get human-readable status text
    * @private
-   * @param {number} value
+   * @param {string} status
+   * @param {string} state
    * @returns {string}
    */
-  #formatTokenBurn(value) {
-    const num = Number(value) || 0;
-    return num.toLocaleString();
+  #getStatusText(status, state) {
+    const stateMap = {
+      'idle': 'Ready',
+      'ready': 'Ready',
+      'thinking': 'Processing...',
+      'working': 'Working...',
+      'busy': 'Busy',
+      'error': 'Connection lost',
+      'offline': 'Offline'
+    };
+    
+    // First check state, then fall back to status
+    if (state && stateMap[state]) {
+      return stateMap[state];
+    }
+    
+    if (status && stateMap[status]) {
+      return stateMap[status];
+    }
+    
+    return 'Ready';
   }
 
   /**

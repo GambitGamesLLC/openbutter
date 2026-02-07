@@ -123,22 +123,35 @@ class ButterMessage extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
-          margin-bottom: 12px;
+          display: flex;
+          width: 100%;
+        }
+
+        :host([sender="user"]) {
+          justify-content: flex-end;
+        }
+
+        :host([sender="orchestrator"]),
+        :host([sender="system"]) {
+          justify-content: flex-start;
         }
 
         .message-wrapper {
           display: flex;
           gap: 12px;
           align-items: flex-start;
-          max-width: 100%;
+          max-width: 85%;
+        }
+
+        .sender-user .message-wrapper {
+          flex-direction: row-reverse;
         }
 
         .sender-avatar {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          background: var(--butter-avatar-bg, #e0e0e0);
+          background: var(--butter-avatar-bg, #6366f1);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -146,9 +159,20 @@ class ButterMessage extends HTMLElement {
           flex-shrink: 0;
         }
 
+        .sender-user .sender-avatar {
+          background: var(--butter-user-avatar-bg, #475569);
+        }
+
         .message-content {
           flex: 1;
           min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .sender-user .message-content {
+          align-items: flex-end;
         }
 
         .message-header {
@@ -158,37 +182,48 @@ class ButterMessage extends HTMLElement {
           margin-bottom: 4px;
         }
 
+        .sender-user .message-header {
+          flex-direction: row-reverse;
+        }
+
         .sender-name {
           font-weight: 600;
           font-size: 14px;
-          color: var(--butter-sender-color, #333);
+          color: var(--butter-sender-color, #f8fafc);
         }
 
         .timestamp {
           font-size: 12px;
-          color: var(--butter-timestamp-color, #888);
+          color: var(--butter-timestamp-color, #64748b);
         }
 
         .message-body {
-          background: var(--butter-message-bg, #f5f5f5);
+          background: var(--butter-message-bg, rgba(30, 41, 59, 0.6));
           border-radius: 12px;
-          padding: 10px 14px;
+          padding: 12px 16px;
           word-wrap: break-word;
           overflow-wrap: break-word;
+          line-height: 1.5;
+          color: var(--butter-text-color, #f8fafc);
         }
 
         /* Sender-specific styles */
         .sender-user .message-body {
-          background: var(--butter-user-message-bg, #dcf8c6);
+          background: var(--butter-user-message-bg, #6366f1);
+          color: white;
+          border-radius: 12px 12px 4px 12px;
         }
 
         .sender-orchestrator .message-body {
-          background: var(--butter-orchestrator-message-bg, #e3f2fd);
+          background: var(--butter-orchestrator-message-bg, rgba(30, 41, 59, 0.6));
+          border-radius: 12px 12px 12px 4px;
         }
 
         .sender-system .message-body {
-          background: var(--butter-system-message-bg, #fff3e0);
+          background: var(--butter-system-message-bg, rgba(245, 158, 11, 0.15));
+          border: 1px solid rgba(245, 158, 11, 0.3);
           font-style: italic;
+          border-radius: 12px;
         }
 
         /* Type-specific styles */

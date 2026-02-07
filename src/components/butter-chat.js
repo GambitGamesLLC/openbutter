@@ -77,7 +77,7 @@ class ButterChat extends HTMLElement {
 
   _removeEventListeners() {
     const input = this.querySelector('.message-input');
-    const sendButton = this.querySelector('.send-button');
+    const sendButton = this.querySelector('.send-btn');
     const dropZone = this.querySelector('.file-drop-zone');
 
     if (sendButton && this._boundHandlers.sendClick) {
@@ -165,7 +165,29 @@ class ButterChat extends HTMLElement {
     container.innerHTML = '';
 
     if (messages.length === 0) {
-      container.innerHTML = `<div class="empty-state">No messages yet. Start a conversation!</div>`;
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-logo">🧈</div>
+          <div class="empty-state-text">
+            <strong>Welcome to OpenButter</strong><br>
+            Start a conversation or try one of these:
+          </div>
+          <div class="starter-chips">
+            <button class="starter-chip" data-prompt="Check system health">🔍 Check System Health</button>
+            <button class="starter-chip" data-prompt="Deploy to staging">🚀 Deploy to Staging</button>
+            <button class="starter-chip" data-prompt="Review recent logs">📋 Review Recent Logs</button>
+          </div>
+        </div>
+      `;
+      
+      // Attach starter chip listeners
+      container.querySelectorAll('.starter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const prompt = chip.dataset.prompt;
+          this._sendMessage(prompt);
+        });
+      });
+      
       return;
     }
 
@@ -241,7 +263,7 @@ class ButterChat extends HTMLElement {
     this._removeEventListeners();
 
     const input = this.querySelector('.message-input');
-    const sendButton = this.querySelector('.send-button');
+    const sendButton = this.querySelector('.send-btn');
     const dropZone = this.querySelector('.file-drop-zone');
 
     // Create bound handler references for proper cleanup
@@ -304,39 +326,324 @@ class ButterChat extends HTMLElement {
     const orchestratorId = this._getOrchestratorId();
 
     this.innerHTML = `
+      <style>
+        :host {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          background: var(--chat-bg, #0f172a);
+          color: var(--chat-text, #f8fafc);
+        }
+
+        .chat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 20px;
+          border-bottom: 1px solid var(--border-color, #334155);
+          flex-shrink: 0;
+        }
+
+        .chat-header h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text-primary, #f8fafc);
+        }
+
+        .orchestrator-id {
+          font-size: 12px;
+          color: var(--text-muted, #94a3b8);
+          font-family: monospace;
+        }
+
+        .messages-container {
+          flex: 1;
+          overflow-y: auto;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+          background: var(--border-color, #334155);
+          border-radius: 4px;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          text-align: center;
+          color: var(--text-muted, #94a3b8);
+          gap: 24px;
+        }
+
+        .empty-state-logo {
+          font-size: 64px;
+          opacity: 0.2;
+        }
+
+        .empty-state-text {
+          font-size: 16px;
+          max-width: 400px;
+          line-height: 1.6;
+        }
+
+        .starter-chips {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-top: 16px;
+        }
+
+        .starter-chip {
+          background: var(--bg-secondary, #1e293b);
+          border: 1px solid var(--border-color, #334155);
+          color: var(--text-primary, #f8fafc);
+          padding: 12px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background 0.2s, border-color 0.2s;
+          text-align: left;
+          min-width: 280px;
+        }
+
+        .starter-chip:hover {
+          background: var(--bg-hover, #334155);
+          border-color: var(--border-hover, #475569);
+        }
+
+        /* Message styling */
+        butter-message {
+          display: block;
+        }
+
+        butter-message[sender="user"] {
+          align-self: flex-end;
+          max-width: 80%;
+        }
+
+        butter-message[sender="orchestrator"],
+        butter-message[sender="system"] {
+          align-self: flex-start;
+          max-width: 80%;
+        }
+
+        /* Loading indicator */
+        .loading-indicator {
+          padding: 12px 20px;
+          text-align: center;
+          color: var(--text-muted, #94a3b8);
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+
+        /* Chat input area - Floating pill design */
+        .chat-input-wrapper {
+          padding: 16px 20px 24px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .chat-input-pill {
+          display: flex;
+          align-items: flex-end;
+          gap: 12px;
+          background: var(--input-bg, #334155);
+          border: 1px solid var(--border-color, #475569);
+          border-radius: 24px;
+          padding: 12px 16px;
+          min-height: 48px;
+          max-width: 800px;
+          margin: 0 auto;
+          width: 100%;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-input-pill:focus-within {
+          border-color: var(--accent, #6366f1);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .attach-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted, #94a3b8);
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s, background 0.2s;
+          flex-shrink: 0;
+        }
+
+        .attach-btn:hover {
+          color: var(--text-primary, #f8fafc);
+          background: var(--bg-hover, #475569);
+        }
+
+        .message-input {
+          flex: 1;
+          background: none;
+          border: none;
+          color: var(--text-primary, #f8fafc);
+          font-size: 16px;
+          line-height: 1.5;
+          resize: none;
+          outline: none;
+          min-height: 24px;
+          max-height: 200px;
+          font-family: inherit;
+        }
+
+        .message-input::placeholder {
+          color: var(--text-muted, #64748b);
+        }
+
+        .send-btn {
+          background: var(--accent, #6366f1);
+          border: none;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s, transform 0.1s;
+          flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+          background: var(--accent-hover, #4f46e5);
+        }
+
+        .send-btn:active {
+          transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+          background: var(--border-color, #475569);
+          cursor: not-allowed;
+        }
+
+        /* File drop zone */
+        .file-drop-zone {
+          display: none;
+          position: absolute;
+          top: 56px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.9);
+          border: 2px dashed var(--accent, #6366f1);
+          border-radius: 12px;
+          margin: 20px;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-muted, #94a3b8);
+          font-size: 16px;
+          z-index: 10;
+        }
+
+        .file-drop-zone.drag-over {
+          display: flex;
+          background: rgba(99, 102, 241, 0.1);
+          color: var(--accent, #6366f1);
+        }
+
+        /* Token counter */
+        .token-counter {
+          text-align: right;
+          font-size: 12px;
+          color: var(--text-muted, #94a3b8);
+          font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+          opacity: 0.6;
+          padding-right: 20px;
+        }
+
+        .token-counter:hover {
+          opacity: 1;
+        }
+      </style>
+
       <div class="chat-header">
         <h3>Chat</h3>
         ${orchestratorId ? `<div class="orchestrator-id">${this.escapeHtml(orchestratorId)}</div>` : ''}
       </div>
 
+      <div class="file-drop-zone">
+        Drop files here to upload
+      </div>
+
       <div class="messages-container">
-        <div class="empty-state">No messages yet. Start a conversation!</div>
+        <div class="empty-state">
+          <div class="empty-state-logo">🧈</div>
+          <div class="empty-state-text">
+            <strong>Welcome to OpenButter</strong><br>
+            Start a conversation or try one of these:
+          </div>
+          <div class="starter-chips">
+            <button class="starter-chip" data-prompt="Check system health">🔍 Check System Health</button>
+            <button class="starter-chip" data-prompt="Deploy to staging">🚀 Deploy to Staging</button>
+            <button class="starter-chip" data-prompt="Review recent logs">📋 Review Recent Logs</button>
+          </div>
+        </div>
       </div>
 
       <div class="loading-indicator" style="display: ${this.hasAttribute('loading') ? 'block' : 'none'};">
         <span>Loading...</span>
       </div>
 
-      <div class="chat-input-area">
-        <div class="file-drop-zone">
-          Drop files here or type a message below
-        </div>
-        <div class="input-wrapper">
+      <div class="chat-input-wrapper">
+        <div class="chat-input-pill">
+          <button class="attach-btn" aria-label="Attach file">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
           <textarea 
             class="message-input" 
             placeholder="Type a message..."
             rows="1"
             aria-label="Message input"
           ></textarea>
-          <button class="send-button" aria-label="Send message">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="send-btn" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
           </button>
         </div>
+        <div class="token-counter">Model: Kimi K2.5 • 0 tokens</div>
       </div>
     `;
+
+    // Attach starter chip listeners
+    this.querySelectorAll('.starter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.dataset.prompt;
+        this._sendMessage(prompt);
+      });
+    });
   }
 
   escapeHtml(text) {
