@@ -10,14 +10,31 @@
  */
 
 export class ButterConnector extends EventTarget {
-  constructor(url = null) {
+  constructor(url = null, token = null, options = {}) {
     super();
+
+    // Backward compatibility: Extract token from URL if provided there but not as arg
+    if (url && !token && typeof url === 'string' && (url.includes('?token=') || url.includes('&token='))) {
+      try {
+        const urlObj = new URL(url);
+        token = urlObj.searchParams.get('token');
+        // Clean token from URL
+        urlObj.searchParams.delete('token');
+        url = urlObj.toString();
+      } catch (e) {
+        console.warn('Could not extract token from URL:', e);
+      }
+    }
+
     this.url = url || this._getDefaultUrl();
+    this.token = token;
     this.ws = null;
     this.connected = false;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 1000;
+    this.connectRequestId = null;
+    this.shouldReconnect = true; // Control reconnection behavior
 
     // Keepalive / heartbeat
     this.pingInterval = null;
@@ -30,22 +47,18 @@ export class ButterConnector extends EventTarget {
 
   _getDefaultUrl() {
     // OpenClaw Gateway default WebSocket port (use 127.0.0.1 for loopback binding compatibility)
-    // Token auth required - passed as query param for browser WebSocket
-    const token = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
-    return `ws://127.0.0.1:18789/?token=${token}`;
+    return `ws://127.0.0.1:18789`;
   }
 
   async connect() {
+    // Reset reconnect flag on new connection attempt
+    this.shouldReconnect = true;
+
     try {
       this.ws = new WebSocket(this.url);
 
       this.ws.onopen = () => {
-        console.log('🔌 Connected to OpenButter');
-        this.connected = true;
-        this.reconnectAttempts = 0;
-        this.missedPongs = 0;
-        this._startKeepalive();
-        this.dispatchEvent(new CustomEvent('connected'));
+        console.log('Socket open, waiting for handshake...');
       };
 
       this.ws.onclose = () => {
@@ -55,7 +68,13 @@ export class ButterConnector extends EventTarget {
         this.connected = false;
         this._stopKeepalive();
         this.dispatchEvent(new CustomEvent('disconnected'));
-        this._attemptReconnect();
+        
+        // Only reconnect if allowed
+        if (this.shouldReconnect) {
+          this._attemptReconnect();
+        } else {
+          console.log('🔌 Reconnection stopped (shouldReconnect=false)');
+        }
       };
 
       this.ws.onerror = (error) => {
@@ -66,6 +85,30 @@ export class ButterConnector extends EventTarget {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
+          // Handle handshake challenge
+          if (data.type === 'event' && data.event === 'connect.challenge') {
+            this._sendHandshake(data.payload.nonce);
+            return;
+          }
+
+          // Handle handshake response
+          if (data.type === 'res' && data.id === this.connectRequestId) {
+            if (data.ok) {
+              console.log('🔌 Connected to OpenButter (Handshake OK)');
+              this.connected = true;
+              this.reconnectAttempts = 0;
+              this.missedPongs = 0;
+              this._startKeepalive();
+              this.dispatchEvent(new CustomEvent('connected'));
+            } else {
+              console.error('Handshake failed:', data.error);
+              // Fatal auth error - do not reconnect
+              this.shouldReconnect = false;
+              this.disconnect();
+            }
+            return;
+          }
 
           // Handle pong response
           if (data.type === 'pong') {
@@ -81,6 +124,39 @@ export class ButterConnector extends EventTarget {
     } catch (error) {
       console.error('Failed to connect:', error);
       throw error;
+    }
+  }
+
+  _sendHandshake(nonce) {
+    this.connectRequestId = 'req-' + Date.now();
+
+    const handshake = {
+      type: 'req',
+      id: this.connectRequestId,
+      method: 'connect',
+      params: {
+        minProtocol: 3,
+        maxProtocol: 3,
+        client: {
+          id: 'webchat-ui',
+          version: '0.1.0',
+          platform: 'browser',
+          mode: 'ui'
+        },
+        caps: ['rpc'],
+        scopes: ['gateway:rpc']
+      }
+    };
+
+    // Only add auth if we have a token
+    if (this.token) {
+      handshake.params.auth = {
+        token: this.token
+      };
+    }
+    
+    if (this.ws) {
+      this.ws.send(JSON.stringify(handshake));
     }
   }
 
@@ -157,7 +233,7 @@ export class ButterConnector extends EventTarget {
     if (this.missedPongs >= this.maxMissedPongs) {
       console.error('🔌 Too many missed pongs, reconnecting...');
       this.disconnect();
-      this._attemptReconnect();
+      // Note: disconnect() triggers onclose which handles reconnect via shouldReconnect (true by default)
     }
   }
 

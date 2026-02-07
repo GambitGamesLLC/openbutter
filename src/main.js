@@ -644,8 +644,12 @@ async function init() {
     const store = new ButterStore();
     window.butterStore = store;
 
+    // Check for token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
     // Create connector
-    const connector = new ButterConnector();
+    const connector = new ButterConnector(null, token);
     window.butterConnector = connector; // Expose for debugging
 
     // Create and mount app component
