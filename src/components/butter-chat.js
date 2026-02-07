@@ -57,6 +57,14 @@ class ButterChat extends HTMLElement {
     this._connector = value;
   }
 
+  setOrchestrator(orchestratorId) {
+    this.setAttribute('orchestrator-id', orchestratorId);
+  }
+
+  getActiveOrchestrator() {
+    return this.getAttribute('orchestrator-id');
+  }
+
   connectedCallback() {
     this.render();
     this.attachEventListeners();

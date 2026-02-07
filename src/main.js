@@ -279,8 +279,8 @@ class ButterApp extends HTMLElement {
     // Listen for orchestrator selection changes from sidebar
     const sidebar = this.querySelector('#sidebar');
     if (sidebar) {
-      sidebar.addEventListener('orchestrator-change', (e) => {
-        const orchestratorId = e.detail?.orchestratorId;
+      sidebar.addEventListener('orchestrator-select', (e) => {
+        const orchestratorId = e.detail?.id;
         if (orchestratorId) {
           this.updateActiveOrchestrator(orchestratorId);
         }
