@@ -325,11 +325,6 @@ class ButterApp extends HTMLElement {
   }
 
   async sendChatMessage(content) {
-    if (!this.connector || !this.connector.connected) {
-      console.warn('[ButterApp] Cannot send message: not connected');
-      return;
-    }
-
     try {
       // Get active orchestrator from chat or store
       const chat = this.querySelector('#chat');
@@ -345,21 +340,24 @@ class ButterApp extends HTMLElement {
         type: 'text'
       };
       
-      // Add to store immediately for UI feedback
+      // Add to store immediately for UI feedback (even if not connected)
       const messages = this.store.get('messages') || [];
       this.store.set('messages', [...messages, message]);
       
-      // Send via connector
-      await this.connector.send({
-        type: 'chat_message',
-        payload: {
-          message: content,
-          orchestratorId,
-          timestamp: Date.now()
-        }
-      });
-      
-      console.log('[ButterApp] Message sent:', content);
+      // Try to send via connector if connected
+      if (this.connector && this.connector.connected) {
+        await this.connector.send({
+          type: 'chat_message',
+          payload: {
+            message: content,
+            orchestratorId,
+            timestamp: Date.now()
+          }
+        });
+        console.log('[ButterApp] Message sent:', content);
+      } else {
+        console.warn('[ButterApp] Message added locally but not sent (not connected)');
+      }
     } catch (error) {
       console.error('[ButterApp] Failed to send message:', error);
       
