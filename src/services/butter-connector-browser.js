@@ -111,7 +111,7 @@ export class ButterConnector extends EventTarget {
           }
 
           // Handle pong response
-          if (data.type === 'pong') {
+          if (data.method === 'pong' || data.type === 'pong') {
             this._handlePong();
             return;
           }
@@ -196,7 +196,7 @@ export class ButterConnector extends EventTarget {
     }
 
     try {
-      this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+      this.ws.send(JSON.stringify({ method: 'ping', timestamp: Date.now() }));
 
       // Set timeout for pong response
       this.pongTimeout = setTimeout(() => {
