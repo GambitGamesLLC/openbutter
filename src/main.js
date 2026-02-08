@@ -349,7 +349,7 @@ class ButterApp extends HTMLElement {
         await this.connector.send({
           type: 'req',
           id: 'msg-' + Date.now(),
-          method: 'chat_message',
+          method: 'chat.send',
           params: {
             message: content,
             orchestratorId,
