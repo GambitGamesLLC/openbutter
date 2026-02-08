@@ -130,6 +130,10 @@ export class ButterConnector extends EventTarget {
   _sendHandshake(nonce) {
     this.connectRequestId = 'req-' + Date.now();
 
+    // Get Gateway token from URL or use default
+    const urlParams = new URLSearchParams(window.location.search);
+    const gatewayToken = urlParams.get('token') || 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
+
     const handshake = {
       type: 'req',
       id: this.connectRequestId,
@@ -138,22 +142,19 @@ export class ButterConnector extends EventTarget {
         minProtocol: 3,
         maxProtocol: 3,
         client: {
-          id: 'webchat-ui',
+          id: 'openbutter-browser',
           version: '0.1.0',
           platform: 'browser',
-          mode: 'ui'
+          mode: 'webchat',
+          displayName: 'OpenButter Browser'
         },
         caps: ['rpc'],
-        scopes: ['gateway:rpc']
+        scopes: ['gateway:rpc'],
+        auth: {
+          token: gatewayToken
+        }
       }
     };
-
-    // Only add auth if we have a token
-    if (this.token) {
-      handshake.params.auth = {
-        token: this.token
-      };
-    }
     
     if (this.ws) {
       this.ws.send(JSON.stringify(handshake));
