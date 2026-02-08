@@ -351,9 +351,9 @@ class ButterApp extends HTMLElement {
           id: 'msg-' + Date.now(),
           method: 'chat.send',
           params: {
-            message: content,
-            orchestratorId,
-            timestamp: Date.now()
+            sessionKey: orchestratorId ? `agent:${orchestratorId}:main` : 'agent:main:main',
+            idempotencyKey: 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+            message: content
           }
         });
         console.log('[ButterApp] Message sent:', content);
