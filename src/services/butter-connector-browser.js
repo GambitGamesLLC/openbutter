@@ -130,9 +130,8 @@ export class ButterConnector extends EventTarget {
   _sendHandshake(nonce) {
     this.connectRequestId = 'req-' + Date.now();
 
-    // Get Gateway token from URL or use default
-    const urlParams = new URLSearchParams(window.location.search);
-    const gatewayToken = urlParams.get('token') || 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
+    // Use the paired openclaw-control-ui device token which has operator.admin scope
+    const controlUiToken = '85f924b326c94aaeab4ce5bd2a62b20e';
 
     const handshake = {
       type: 'req',
@@ -142,15 +141,15 @@ export class ButterConnector extends EventTarget {
         minProtocol: 3,
         maxProtocol: 3,
         client: {
-          id: 'webchat-ui',
+          id: 'openclaw-control-ui',
           version: '0.1.0',
           platform: 'browser',
-          mode: 'ui'
+          mode: 'webchat'
         },
         caps: ['rpc'],
-        scopes: ['gateway:rpc'],
+        scopes: ['operator.admin', 'operator.approvals', 'gateway:rpc'],
         auth: {
-          token: gatewayToken
+          token: controlUiToken
         }
       }
     };
