@@ -173,17 +173,21 @@ class ButterChat extends HTMLElement {
     container.innerHTML = '';
 
     if (messages.length === 0) {
+      const activeOrchestratorId = this._getOrchestratorId();
+      const orchestrator = activeOrchestratorId ? this._store?.get('orchestrators')?.find(o => o.id === activeOrchestratorId) : null;
+      const name = orchestrator?.name || 'Agent';
+      
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-logo">🧈</div>
-          <div class="empty-state-text">
-            <strong>Welcome to OpenButter</strong><br>
-            Start a conversation or try one of these:
-          </div>
+          <div class="hero-text">${activeOrchestratorId ? `Chat with ${name}` : 'What should we orchestrate?'}</div>
+          <div class="hero-subtext">${activeOrchestratorId ? 'What would you like to discuss?' : 'Choose an agent and start a conversation'}</div>
           <div class="starter-chips">
-            <button class="starter-chip" data-prompt="Check system health">🔍 Check System Health</button>
-            <button class="starter-chip" data-prompt="Deploy to staging">🚀 Deploy to Staging</button>
-            <button class="starter-chip" data-prompt="Review recent logs">📋 Review Recent Logs</button>
+            <button class="starter-chip" data-prompt="Check system health">Check Health</button>
+            <button class="starter-chip" data-prompt="Deploy to staging">Deploy</button>
+            <button class="starter-chip" data-prompt="Review recent logs">Logs</button>
+            <button class="starter-chip" data-prompt="System status">Status</button>
+            <button class="starter-chip" data-prompt="Run diagnostics">Diagnostics</button>
           </div>
         </div>
       `;
