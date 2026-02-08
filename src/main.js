@@ -347,8 +347,10 @@ class ButterApp extends HTMLElement {
       // Try to send via connector if connected
       if (this.connector && this.connector.connected) {
         await this.connector.send({
-          type: 'chat_message',
-          payload: {
+          type: 'req',
+          id: 'msg-' + Date.now(),
+          method: 'chat_message',
+          params: {
             message: content,
             orchestratorId,
             timestamp: Date.now()

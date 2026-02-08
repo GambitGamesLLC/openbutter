@@ -196,7 +196,13 @@ export class ButterConnector extends EventTarget {
     }
 
     try {
-      this.ws.send(JSON.stringify({ method: 'ping', timestamp: Date.now() }));
+      // Gateway expects proper frame format
+      this.ws.send(JSON.stringify({ 
+        type: 'req',
+        id: 'ping-' + Date.now(),
+        method: 'ping',
+        params: {}
+      }));
 
       // Set timeout for pong response
       this.pongTimeout = setTimeout(() => {
