@@ -396,7 +396,14 @@ class ButterChat extends HTMLElement {
           height: 100%;
           text-align: center;
           padding: 40px 20px;
-          gap: 32px;
+          gap: 24px;
+        }
+
+        .empty-state-logo {
+          font-size: 96px;
+          line-height: 1;
+          margin-bottom: 8px;
+          filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.3));
         }
 
         .hero-text {
@@ -410,13 +417,15 @@ class ButterChat extends HTMLElement {
           background-clip: text;
           letter-spacing: -0.02em;
           margin-bottom: 0.5rem;
+          color: var(--text-primary, #f8fafc);
         }
 
         .hero-subtext {
           font-size: 1.125rem;
-          color: var(--text-muted, #94a3b8);
+          color: var(--text-primary, #f8fafc);
           font-weight: 400;
           margin-bottom: 2rem;
+          opacity: 0.9;
         }
 
         /* Horizontal suggestion chips - Gemini style */
@@ -500,12 +509,12 @@ class ButterChat extends HTMLElement {
 
         .chat-input-pill {
           display: flex;
-          align-items: flex-end;
+          align-items: center;
           gap: 12px;
           background: rgba(30, 41, 59, 0.8);
           border: 1px solid rgba(71, 85, 105, 0.5);
           border-radius: 24px;
-          padding: 14px 20px;
+          padding: 12px 20px;
           min-height: 56px;
           width: 100%;
           max-width: 768px;
@@ -641,6 +650,7 @@ class ButterChat extends HTMLElement {
 
       <div class="messages-container">
         <div class="empty-state">
+          <div class="empty-state-logo">🧈</div>
           <div class="hero-text">What should we orchestrate?</div>
           <div class="hero-subtext">Choose an agent and start a conversation</div>
           <div class="starter-chips">
