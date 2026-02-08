@@ -164,10 +164,12 @@ export class ButterConnector extends EventTarget {
    * @private
    */
   _startKeepalive() {
+    // Disabled: Gateway ping requires operator.admin scope
+    // The Gateway sends health events which keep the connection alive
     this._stopKeepalive();
-    this.pingInterval = setInterval(() => {
-      this._sendPing();
-    }, this.pingIntervalMs);
+    // this.pingInterval = setInterval(() => {
+    //   this._sendPing();
+    // }, this.pingIntervalMs);
   }
 
   /**
