@@ -690,12 +690,12 @@ class ButterChat extends HTMLElement {
     });
 
     // Update hero text based on selected orchestrator
-    const orchestratorId = this._getOrchestratorId();
+    const activeOrchestratorId = this._getOrchestratorId();
     const heroText = this.querySelector('.hero-text');
     const heroSubtext = this.querySelector('.hero-subtext');
     if (heroText && heroSubtext) {
-      if (orchestratorId) {
-        const orchestrator = this._store?.get('orchestrators')?.find(o => o.id === orchestratorId);
+      if (activeOrchestratorId) {
+        const orchestrator = this._store?.get('orchestrators')?.find(o => o.id === activeOrchestratorId);
         const name = orchestrator?.name || 'Agent';
         heroText.textContent = `Chat with ${name}`;
         heroSubtext.textContent = 'What would you like to discuss?';
