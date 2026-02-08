@@ -387,7 +387,7 @@ class ButterChat extends HTMLElement {
           border-radius: 4px;
         }
 
-        /* Empty state styling */
+        /* Empty state styling - Gemini inspired */
         .empty-state {
           display: flex;
           flex-direction: column;
@@ -395,44 +395,71 @@ class ButterChat extends HTMLElement {
           justify-content: center;
           height: 100%;
           text-align: center;
+          padding: 40px 20px;
+          gap: 32px;
+        }
+
+        .hero-text {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-weight: 500;
+          font-size: 3rem;
+          line-height: 1.2;
+          background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: -0.02em;
+          margin-bottom: 0.5rem;
+        }
+
+        .hero-subtext {
+          font-size: 1.125rem;
           color: var(--text-muted, #94a3b8);
-          gap: 24px;
+          font-weight: 400;
+          margin-bottom: 2rem;
         }
 
-        .empty-state-logo {
-          font-size: 64px;
-          opacity: 0.2;
-        }
-
-        .empty-state-text {
-          font-size: 16px;
-          max-width: 400px;
-          line-height: 1.6;
-        }
-
+        /* Horizontal suggestion chips - Gemini style */
         .starter-chips {
           display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-top: 16px;
+          flex-direction: row;
+          gap: 12px;
+          overflow-x: auto;
+          padding: 8px 4px;
+          max-width: 100%;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .starter-chips::-webkit-scrollbar {
+          display: none;
         }
 
         .starter-chip {
-          background: var(--bg-secondary, #1e293b);
-          border: 1px solid var(--border-color, #334155);
+          background: var(--bg-secondary, rgba(30, 41, 59, 0.6));
+          border: 1px solid var(--border-color, rgba(51, 65, 85, 0.5));
           color: var(--text-primary, #f8fafc);
           padding: 12px 20px;
-          border-radius: 8px;
+          border-radius: 999px;
           cursor: pointer;
-          font-size: 14px;
-          transition: background 0.2s, border-color 0.2s;
-          text-align: left;
-          min-width: 280px;
+          font-size: 0.95rem;
+          font-weight: 500;
+          transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+          text-align: center;
+          white-space: nowrap;
+          flex-shrink: 0;
+          backdrop-filter: blur(10px);
         }
 
         .starter-chip:hover {
-          background: var(--bg-hover, #334155);
-          border-color: var(--border-hover, #475569);
+          background: var(--bg-hover, rgba(51, 65, 85, 0.8));
+          border-color: var(--border-hover, rgba(71, 85, 105, 0.8));
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .starter-chip:active {
+          transform: translateY(0);
         }
 
         /* Message styling */
@@ -460,33 +487,37 @@ class ButterChat extends HTMLElement {
           flex-shrink: 0;
         }
 
-        /* Chat input area - Floating pill design */
+        /* Chat input area - Gemini-inspired centered design */
         .chat-input-wrapper {
-          padding: 16px 20px 24px;
+          padding: 24px 20px 32px;
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          align-items: center;
+          gap: 12px;
+          background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, transparent 100%);
         }
 
         .chat-input-pill {
           display: flex;
           align-items: flex-end;
           gap: 12px;
-          background: var(--input-bg, #334155);
-          border: 1px solid var(--border-color, #475569);
+          background: rgba(30, 41, 59, 0.8);
+          border: 1px solid rgba(71, 85, 105, 0.5);
           border-radius: 24px;
-          padding: 12px 16px;
-          min-height: 48px;
-          max-width: 800px;
-          margin: 0 auto;
+          padding: 14px 20px;
+          min-height: 56px;
           width: 100%;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          max-width: 768px;
+          transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .chat-input-pill:focus-within {
-          border-color: var(--accent, #6366f1);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+          border-color: rgba(99, 102, 241, 0.6);
+          box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(99, 102, 241, 0.3);
+          background: rgba(30, 41, 59, 0.95);
         }
 
         .attach-btn {
@@ -531,26 +562,32 @@ class ButterChat extends HTMLElement {
           border: none;
           color: white;
           cursor: pointer;
-          padding: 8px;
+          padding: 10px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background 0.2s, transform 0.1s;
+          transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
           flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
         }
 
         .send-btn:hover {
           background: var(--accent-hover, #4f46e5);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
         .send-btn:active {
-          transform: scale(0.95);
+          transform: scale(0.95) translateY(0);
+          box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
         }
 
         .send-btn:disabled {
           background: var(--border-color, #475569);
           cursor: not-allowed;
+          box-shadow: none;
+          opacity: 0.5;
         }
 
         /* File drop zone */
@@ -578,18 +615,18 @@ class ButterChat extends HTMLElement {
           color: var(--accent, #6366f1);
         }
 
-        /* Token counter */
+        /* Token counter - subtle footer style */
         .token-counter {
-          text-align: right;
-          font-size: 12px;
-          color: var(--text-muted, #94a3b8);
+          text-align: center;
+          font-size: 11px;
+          color: rgba(148, 163, 184, 0.5);
           font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-          opacity: 0.6;
-          padding-right: 20px;
+          padding-top: 8px;
+          transition: color 0.2s;
         }
 
-        .token-counter:hover {
-          opacity: 1;
+        .chat-input-wrapper:hover .token-counter {
+          color: rgba(148, 163, 184, 0.8);
         }
       </style>
 
@@ -604,15 +641,14 @@ class ButterChat extends HTMLElement {
 
       <div class="messages-container">
         <div class="empty-state">
-          <div class="empty-state-logo">🧈</div>
-          <div class="empty-state-text">
-            <strong>Welcome to OpenButter</strong><br>
-            Start a conversation or try one of these:
-          </div>
+          <div class="hero-text">What should we orchestrate?</div>
+          <div class="hero-subtext">Choose an agent and start a conversation</div>
           <div class="starter-chips">
-            <button class="starter-chip" data-prompt="Check system health">🔍 Check System Health</button>
-            <button class="starter-chip" data-prompt="Deploy to staging">🚀 Deploy to Staging</button>
-            <button class="starter-chip" data-prompt="Review recent logs">📋 Review Recent Logs</button>
+            <button class="starter-chip" data-prompt="Check system health">Check Health</button>
+            <button class="starter-chip" data-prompt="Deploy to staging">Deploy</button>
+            <button class="starter-chip" data-prompt="Review recent logs">Logs</button>
+            <button class="starter-chip" data-prompt="System status">Status</button>
+            <button class="starter-chip" data-prompt="Run diagnostics">Diagnostics</button>
           </div>
         </div>
       </div>
@@ -652,6 +688,22 @@ class ButterChat extends HTMLElement {
         this._sendMessage(prompt);
       });
     });
+
+    // Update hero text based on selected orchestrator
+    const orchestratorId = this._getOrchestratorId();
+    const heroText = this.querySelector('.hero-text');
+    const heroSubtext = this.querySelector('.hero-subtext');
+    if (heroText && heroSubtext) {
+      if (orchestratorId) {
+        const orchestrator = this._store?.get('orchestrators')?.find(o => o.id === orchestratorId);
+        const name = orchestrator?.name || 'Agent';
+        heroText.textContent = `Chat with ${name}`;
+        heroSubtext.textContent = 'What would you like to discuss?';
+      } else {
+        heroText.textContent = 'What should we orchestrate?';
+        heroSubtext.textContent = 'Choose an agent and start a conversation';
+      }
+    }
   }
 
   escapeHtml(text) {
