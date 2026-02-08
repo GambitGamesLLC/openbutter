@@ -130,8 +130,8 @@ export class ButterConnector extends EventTarget {
   _sendHandshake(nonce) {
     this.connectRequestId = 'req-' + Date.now();
 
-    // Use the paired openclaw-control-ui device token which has operator.admin scope
-    const controlUiToken = '85f924b326c94aaeab4ce5bd2a62b20e';
+    // Use the Gateway's configured auth token
+    const gatewayToken = 'c41df81f4efbf047b6aa0b0cb297536033274be12080dbe1';
 
     const handshake = {
       type: 'req',
@@ -149,7 +149,7 @@ export class ButterConnector extends EventTarget {
         caps: ['rpc'],
         scopes: ['operator.admin', 'operator.approvals', 'gateway:rpc'],
         auth: {
-          token: controlUiToken
+          token: gatewayToken
         }
       }
     };
