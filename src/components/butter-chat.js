@@ -356,12 +356,12 @@ class ButterChat extends HTMLElement {
           margin: 0;
           font-size: 16px;
           font-weight: 600;
-          color: var(--text-primary, #f8fafc);
+          color: #f8fafc;
         }
 
         .orchestrator-id {
           font-size: 12px;
-          color: var(--text-muted, #94a3b8);
+          color: #94a3b8;
           font-family: monospace;
         }
 
@@ -417,12 +417,11 @@ class ButterChat extends HTMLElement {
           background-clip: text;
           letter-spacing: -0.02em;
           margin-bottom: 0.5rem;
-          color: var(--text-primary, #f8fafc);
         }
 
         .hero-subtext {
           font-size: 1.125rem;
-          color: var(--text-primary, #f8fafc);
+          color: #f8fafc;
           font-weight: 400;
           margin-bottom: 2rem;
           opacity: 0.9;
@@ -445,9 +444,9 @@ class ButterChat extends HTMLElement {
         }
 
         .starter-chip {
-          background: var(--bg-secondary, rgba(30, 41, 59, 0.6));
-          border: 1px solid var(--border-color, rgba(51, 65, 85, 0.5));
-          color: var(--text-primary, #f8fafc);
+          background: rgba(30, 41, 59, 0.6);
+          border: 1px solid rgba(51, 65, 85, 0.5);
+          color: #f8fafc;
           padding: 12px 20px;
           border-radius: 999px;
           cursor: pointer;
@@ -461,8 +460,8 @@ class ButterChat extends HTMLElement {
         }
 
         .starter-chip:hover {
-          background: var(--bg-hover, rgba(51, 65, 85, 0.8));
-          border-color: var(--border-hover, rgba(71, 85, 105, 0.8));
+          background: rgba(51, 65, 85, 0.8);
+          border-color: rgba(71, 85, 105, 0.8);
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
@@ -491,7 +490,7 @@ class ButterChat extends HTMLElement {
         .loading-indicator {
           padding: 12px 20px;
           text-align: center;
-          color: var(--text-muted, #94a3b8);
+          color: #94a3b8;
           font-size: 14px;
           flex-shrink: 0;
         }
@@ -532,7 +531,7 @@ class ButterChat extends HTMLElement {
         .attach-btn {
           background: none;
           border: none;
-          color: var(--text-muted, #94a3b8);
+          color: #94a3b8;
           cursor: pointer;
           padding: 4px;
           border-radius: 6px;
@@ -544,15 +543,15 @@ class ButterChat extends HTMLElement {
         }
 
         .attach-btn:hover {
-          color: var(--text-primary, #f8fafc);
-          background: var(--bg-hover, #475569);
+          color: #f8fafc;
+          background: rgba(71, 85, 105, 0.8);
         }
 
         .message-input {
           flex: 1;
           background: none;
           border: none;
-          color: var(--text-primary, #f8fafc);
+          color: #f8fafc;
           font-size: 16px;
           line-height: 1.5;
           resize: none;
@@ -563,7 +562,7 @@ class ButterChat extends HTMLElement {
         }
 
         .message-input::placeholder {
-          color: var(--text-muted, #64748b);
+          color: #64748b;
         }
 
         .send-btn {
@@ -613,7 +612,7 @@ class ButterChat extends HTMLElement {
           margin: 20px;
           align-items: center;
           justify-content: center;
-          color: var(--text-muted, #94a3b8);
+          color: #94a3b8;
           font-size: 16px;
           z-index: 10;
         }
