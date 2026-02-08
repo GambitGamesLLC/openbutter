@@ -142,11 +142,10 @@ export class ButterConnector extends EventTarget {
         minProtocol: 3,
         maxProtocol: 3,
         client: {
-          id: 'openbutter-browser',
+          id: 'webchat-ui',
           version: '0.1.0',
           platform: 'browser',
-          mode: 'webchat',
-          displayName: 'OpenButter Browser'
+          mode: 'ui'
         },
         caps: ['rpc'],
         scopes: ['gateway:rpc'],
